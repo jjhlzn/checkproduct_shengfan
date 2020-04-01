@@ -1,0 +1,774 @@
+<style>
+  .weui-cell__bd{
+    width: 60px;
+  }
+  .weui-cell__ft input {
+    width: 180px;
+  }
+
+  .prop_description {
+    text-align: justify;
+    margin-left: 30px;
+    font-size: 15px;
+  }
+
+  .addressPicker{
+    margin-left: 5px;
+    padding-left: 5px;
+    overflow:hidden;
+  }
+
+  input.inputBox {
+    width: 40px; 
+    border: solid 1px lightgray; 
+    float: left;
+    text-align:center
+  }
+
+  .x {
+    width: 34px; float: left; text-align:center;
+  }
+
+</style>
+
+<template>
+
+
+  <view class="page" xmlns:wx="http://www.w3.org/1999/xhtml">
+   
+    <view class="page__bd">
+
+        <view class="weui-cells__title"> 验货属性 </view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell ">
+                <view class="weui-cell__bd">
+                  <view class="weui-label ">注意事项</view>
+                </view>
+                <view class="weui-cell__ft prop_description">
+                 {{product.announcements == null || product.announcements == "" ? "无" : product.announcements}}
+                </view>
+            </view>
+            
+            <view class="weui-cell">
+                <view class="weui-cell__bd">实际验货箱数</view>
+                <view class="weui-cell__ft">
+                   <input type="number" placeholder="" v-model="product.totalCount"/>
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">抽箱数</view>
+                <view class="weui-cell__ft">
+                  <input type="number" placeholder="" v-model="product.pickCount" />
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">实际验货数量</view>
+                <view class="weui-cell__ft">
+                  <input type="number" placeholder="" v-model="product.sjCount" />
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">外箱尺寸</view>
+                <view class="weui-cell__ft">
+                  <input class="inputBox" type="digit" placeholder=""
+                   value="{{product.sizeObj.long != 0 ? product.sizeObj.long : ''}}" bindinput="setLong" focus="{{focusList[0]}}"/> 
+                    <p class="x"> x </p>
+                   <input id="widthInput" class="inputBox" type="digit" placeholder="" 
+                   value="{{product.sizeObj.width != 0 ? product.sizeObj.width : ''}}" bindinput="setWidth" focus="{{focusList[1]}}"/> 
+                    <p class="x"> x </p>
+                   <input class="inputBox" type="digit" placeholder="" 
+                   value="{{product.sizeObj.height != 0 ? product.sizeObj.height : ''}}" bindinput="setHeight" focus="{{focusList[2]}}"/> 
+                    <p style="width: 30px; float: left; text-align:right;"> cm </p>
+                </view>
+            </view>
+            <view class="weui-cell">
+                <view class="weui-cell__bd">单件毛重</view>
+                <view class="weui-cell__ft">
+                  <input  placeholder="" v-model="product.grossWeight"/>
+                </view>
+            </view>
+            <view class="weui-cell">
+                <view class="weui-cell__bd">单件净重</view>
+                <view class="weui-cell__ft">
+                  <input  placeholder="" v-model="product.netWeight" />
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">验货时间</view>
+                <view class="weui-cell__ft">
+                  {{product.checkTime ?
+                   (product.checkTime !=  "1900-01-01 00:00:00" ? product.checkTime : ""): ""}}
+                </view>
+            </view>
+        </view>
+
+        
+
+        <view class="weui-cells__title">其他信息</view>
+        <view class="weui-cells weui-cells_after-title">
+
+            <view class="weui-cell ">
+                <view class="weui-cell__bd">
+                  <view class="weui-label">包装</view>
+                </view>
+                <view class="weui-cell__ft">
+                  {{product.package}}
+                </view>
+            </view>
+
+            <view class="weui-cell ">
+                <view class="weui-cell__bd">
+                  <view class="weui-label ">商品描述</view>
+                </view>
+                <view class="weui-cell__ft prop_description">
+                 {{product.description}}
+                </view>
+            </view>
+            
+        </view>
+
+      
+
+        <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
+        v-bind:index="index"
+        v-on:setfiles="setfiles"
+         v-on:adddeletefile="adddeletefile"
+         v-bind:deleteImages="deleteImages" v-bind:addImages="addImages"
+         v-bind:title="titles[index]" v-bind:key="'uploadImage_' + index" ></uploadImage>
+
+        <view class="weui-cells__title">商品图片</view>
+          <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-uploader__bd">
+                            <view class="weui-uploader__files"  >
+                                 <block wx:for="{{product.productUrls}}" wx:key="*this">
+                                    <view class="weui-uploader__file"  bindtap="previewProductImage" id="image_{{index}}">
+                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                    </view>
+                                </block>
+                            </view>
+                        </view>
+            </view>
+        </view>
+
+        <view class="weui-cells__title">资料库图片</view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-uploader__bd">
+                            <view class="weui-uploader__files"  >
+                                 <block wx:for="{{product.zlkUrls}}" wx:key="*this">
+                                    <view class="weui-uploader__file"  bindtap="previewZlkImage" >
+                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                    </view>
+                                </block>
+                            </view>
+                            
+                        </view>
+            </view>
+        </view>
+
+        <view class="weui-cells__title">验货总评</view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-cell__bd">
+                    <textarea class="weui-textarea" placeholder="请输入验货总评" 
+                    v-model="product.checkMemo" style="height: 14em" maxlength="-1" />
+                    <!--<view class="weui-textarea-counter">0/200</view> -->
+                </view>
+            </view>
+        </view>
+
+         <view class="weui-cells__title">验货地址</view>
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell">
+                <view class="weui-cell__bd">
+                    <textarea class="weui-textarea" placeholder=""  v-model="gpsAddress" style="height: 3.1em" />
+                    <!--<view class="weui-textarea-counter">0/200</view> -->
+                </view>
+            </view>
+        </view>
+
+        
+        <view class="weui-cells__title">验货结果</view>
+        <view class="weui-cells weui-cells_after-title">
+
+
+            <radio-group bindchange="radioChange">
+                <label class="weui-cell weui-check__label" wx:for="{{radioItems}}" wx:key="value">
+                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                    <view class="weui-cell__bd">{{item.name}}</view>
+                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                    </view> 
+                </label>
+            </radio-group>
+
+
+        </view>
+
+        <view class="weui-btn-area" wx:if="{{loginUser.role == 'checker' || loginUser.role == 'checker_manager'}}">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+        </view>
+
+        <view class="weui-btn-area" wx:if="{{loginUser.role == 'checker' || loginUser.role == 'checker_manager'}}">
+            <button class="weui-btn" style="background-color: #e64340;" type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
+        </view>
+
+        <view class="weui-btn-area" wx:if="{{loginUser.role == 'checker' || loginUser.role == 'checker_manager'}}">
+            <button type="default" hover-class="other-button-hover"  bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
+          </view> 
+
+
+        <view class="weui-btn-area">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
+        </view>  
+    </view>
+</view>
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+  const service = require('../service').Service;
+  const uploadFiles = require('../logic/upload').uploadFiles;
+  const utils = require('../utils').utils;
+  const reloadOrder = require('../dataloader2').reloadOrder
+  const QQMapWX = require('../lib/qqmap-wx-jssdk.min.js');
+
+  // 实例化API核心类
+  const qqmapsdk = new QQMapWX({
+    key: 'EQCBZ-JL36X-XVD4X-ZG3ZV-TZBX2-2OFV7' // 必填
+  });  
+
+  import { checkPermission } from '../model/user.js';
+
+  wepy.page({
+    data: {
+      inputmodel: "v-model",
+      test: "testvalue",
+      loginUser: {},
+      maxUploadCount: 3,
+      lock: false,     
+      uploadedCount: 0,
+      radioItems: [
+        { name: '合格', value: '合格', checked: true  },
+        { name: '不合格', value: '不合格'},
+        { name: '担保出货', value: '担保出货' },
+        { name: '返工', value: '返工' },
+        { name: '放空', value: '放空' }
+      ],
+      ticketNo: "",
+      contractNo: "",
+      productNo: "",
+      spid: "",
+      gpsAddress: "",
+      product: {
+
+      },
+      files: [[],[],[],[],[],[],[],[],[],[],[]],
+      titles: ['抽检箱号图片：', '外箱及开箱中包图片：', '辅料及单包包装图片：', '条码扫描结果图片：', '产品及颜色花型图片：',
+               '产品克重图片：', '尺寸工艺图片：', '问题图片：', '返工通知单及保函文件图片：', '验货报告图片：',
+               '重验图片：'],
+      deleteImages: [],
+      addImages: [],   //[{fileName: '', orginName: '', hasAddToDB: true}]
+      uploadImageError: false,
+      focusList: [false, false, false],
+      gpsAddress: '',
+      //addrIndex: -1,
+      //addresses: [""]
+      
+    },
+
+    methods: {
+      bindAddressChange: function (e) {
+        this.setData({
+          addrIndex: e.detail.value
+        })
+      },
+ 
+      setfiles: function(obj) {
+        console.log('setfiles called')
+        console.log("index: " + obj.index)
+        console.log(obj.files)
+        const index = obj.index
+        const tmpFiles =  obj.files
+        const that = this.$wx
+        that.data.files[index] = tmpFiles
+        console.log(that.data.files)
+      },
+
+      adddeletefile: function(obj) {
+         console.log('adddeletefile called')
+         const that = this.$wx
+         that.data.deleteImages.push(obj.url)
+         console.log(that.deleteImages)
+      },
+
+      setGpsAddress: function(e) {
+        this.data.gpsAddress = e.detail.value
+      },
+
+      onLoad: function (options) {
+        var self = this;
+        console.log('options: ' + JSON.stringify(options))
+
+        this.setData({
+          ticketNo: options.ticketNo,
+          contractNo: options.contractNo,
+          productNo: options.productNo,
+          spid: options.spid,
+          loginUser: wx.getStorageSync("loginUser"),
+        })
+        wx.showLoading({
+          title: '加载中',
+        })
+        this.loadProduct()
+      },
+
+      reload: function() {
+        this.loadProduct()
+      },
+
+      splitFiles: function(files) {
+        console.log(files)
+        var result = [[], [], [], [], [], [], [], [], [], [], []]
+        for(var i = 0; i < files.length; i++) {
+          if (isNaN(parseInt(files[i].substr(0, 2))) || parseInt(files[i].substr(0, 2)) > 10 ) {
+            result[0].push(files[i])
+          } else {
+            result[parseInt(files[i].substr(0, 2))].push(files[i])
+          }
+        }
+        return result;
+      },
+
+      loadProduct: function() {
+        var self = this;
+        wx.request({
+          url: service.getProductInfoUrl(),
+          method: "POST",
+          data: {
+            ticketNo: self.data.ticketNo,
+            contractNo: self.data.contractNo,
+            productNo: self.data.productNo,
+            spid: self.data.spid
+          },
+          header: {
+            'content-type': 'application/json'
+          },
+          complete: function (res) {
+            wx.hideLoading()
+            console.log(res);
+            if (res.data.status != 0) {
+              wx.showToast({
+                title: '加载失败',
+              })
+              return;
+            }
+
+            var product = res.data.product
+            product.totalCount = parseFloat(product.totalCount).toFixed(2)
+            if ( (product.totalCount + '').endsWith('.00') ) {
+               product.totalCount = parseInt(product.totalCount)
+            }
+            if (res.data.product.checkAddress == null || res.data.product.checkAddress == "") {
+
+            
+              wx.getLocation({
+                type: 'wgs84',
+                success(res) {
+                  const latitude = res.latitude, longitude = res.longitude
+                  
+                  qqmapsdk.reverseGeocoder({
+                    location: {
+                      latitude: latitude,
+                      longitude: longitude
+                    }, //获取表单传入的位置坐标,不填默认当前位置,示例为string格式
+                    get_poi: 1, //是否返回周边POI列表：1.返回；0不返回(默认),非必须参数
+                    success: function (res) {//成功后的回调
+                      console.log(res);
+                      if (res.status == 0) {
+                        self.setData({
+                          //gpsAddress: res.result.address  
+                          gpsAddress: res.result.formatted_addresses.recommend
+                        })
+
+                      }
+
+                    },
+                    fail: function (error) {
+                      console.error(error);
+                      wx.showToast({
+                        title: error,
+                      })
+                    },
+                    complete: function (res) {
+                    }
+                  })
+                }
+              }) 
+              
+            } else {
+              self.setData({
+                gpsAddress: product.checkAddress
+              })
+            }
+            
+
+            let found = false;
+            self.data.radioItems.forEach(item => {
+              if (item.value == res.data.product.checkResult) {
+                item.checked = true;
+                found = true;
+              } else {
+                delete item.checked;
+              }
+            });
+
+            if (!found) {
+              console.log("can't find")
+              self.data.radioItems[0].checked = true;
+            }
+
+            let sizeObj = utils.extractSize(res.data.product.boxSize);
+            res.data.product.sizeObj = sizeObj;
+
+            let files = self.splitFiles(res.data.product.pictureUrls);
+            //console.log(files)
+            let urls = []
+            for(var i = 0; i < files.length; i++ ) {
+              urls.push(files[i].map(file => service.makeImageUrl(file)));
+            }
+            //console.log(urls)
+
+            res.data.product.zlkUrls = res.data.product.zlkUrls.map(file => service.makeImageUrl(file));
+            res.data.product.productUrls = res.data.product.productUrls.map(file => service.makeProductImageUrl(file));
+            console.log(res.data.product.productUrls)
+            self.setData({
+              product: res.data.product,
+              files: urls,
+              radioItems: self.data.radioItems,
+            })
+
+            if (!found) {
+              console.log("can't find")
+              self.data.product.checkResult = "合格"
+            }
+          },
+          fail: function (err) {
+            wx.hideLoading()
+            wx.showToast({
+              title: '加载失败',
+            })
+          }
+        })
+      },
+
+      setLong: function (e) {
+        console.log(e)
+        const that = this.$wx
+        var lastValue = that.data.product.sizeObj.long
+        that.data.product.sizeObj.long = e.$wx.detail.value;
+        if (lastValue[lastValue.length - 1] == '.' && e.detail.value[e.detail.value.length - 2] == '.') {
+          that.setData({
+            focusList: [false, true, false]
+          })
+        }
+      },
+      setWidth: function (e) {
+        const that = this.$wx
+        var lastValue = that.data.product.sizeObj.width
+        that.data.product.sizeObj.width = e.$wx.detail.value;
+        if (lastValue[lastValue.length - 1] == '.' && e.detail.value[e.detail.value.length - 2] == '.') {
+          that.setData({
+            focusList: [false, false, true]
+          })
+        }
+      },
+      setHeight: function (e) {
+        const that = this.$wx
+        that.data.product.sizeObj.height = e.$wx.detail.value;
+      },
+      /**
+       * 生命周期函数--监听页面显示
+       */
+      onShow: function () {
+        wx.setNavigationBarTitle({
+          title: '验货',
+        })
+        checkPermission()
+      },
+
+      radioChange: function (e) {
+        const that = this.$wx
+        console.log('radio发生change事件，携带value值为：', e.$wx.detail.value);
+        that.data.product.checkResult = e.$wx.detail.value;
+        var radioItems = that.data.radioItems;
+        for (var i = 0, len = radioItems.length; i < len; ++i) {
+          radioItems[i].checked = radioItems[i].value == e.$wx.detail.value;
+        }
+
+        that.setData({
+          radioItems: radioItems
+        });
+      },
+
+      previewZlkImage: function (e) {
+        let id = e.currentTarget.id;
+        let index = parseInt(id.replace('image_', ''));
+        console.log("index = " + index);
+        wx.previewImage({
+          current: this.data.product.zlkUrls[index], // 当前显示图片的http链接
+          urls: this.data.product.zlkUrls // 需要预览的图片http链接列表
+        })
+      },
+
+      previewProductImage: function (e) {
+        let id = e.currentTarget.id;
+        let index = parseInt(id.replace('image_', ''));
+        console.log("index = " + index);
+        wx.previewImage({
+          current: this.data.product.productUrls[index], // 当前显示图片的http链接
+          urls: this.data.product.productUrls // 需要预览的图片http链接列表
+        })
+      },
+
+      bindDeleteCheckResultTap: function() {
+        var self = this.$wx;
+        wx.showModal({
+          title: '提示',
+          content: '确定要清除验货结果吗？',
+          success: function (sm) {
+            if (sm.confirm) {
+
+              wx.request({
+                url: service.clearCheckResultUrl(),
+                method: 'POST',
+                data: {
+                  ticketNo: self.data.ticketNo,
+                  contractNo: self.data.contractNo,
+                  productNo: self.data.productNo,
+                  spid: self.data.spid
+                },
+                header: {
+                  'content-type': 'application/json'
+                },
+                complete: function (res) {
+                  wx.hideLoading()
+                  console.log(res);
+                  if (res.data.status != 0) {
+                    wx.showToast({
+                      title: '不允许清除结果',
+                    })
+                    return;
+                  }
+
+                  //把审核的结果传递回前一个页面
+                  let pages = getCurrentPages();
+                  let curPage = pages[pages.length - 2];
+                  curPage.updateCheckResult(self.data.productNo, self.data.product.spid, "");
+
+                  let prevPage = pages[0];
+                
+                  reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
+
+                  wx.navigateBack({
+                    isCheckSuccess: true
+                  });
+                  
+                },
+                fail: function (err) {
+                  wx.hideLoading()
+                  wx.showToast({
+                    title: '加载失败',
+                  })
+                }
+              })
+              
+            } else if (sm.cancel) {
+              console.log('用户点击取消')
+            }
+          }
+        })
+
+        
+      },
+
+      checkBeforeTap: function () {
+        let self = this;
+        if (!utils.isInt(self.data.product.totalCount)) {
+          return "实际验货箱数必须是整数";
+        }
+        if (!utils.isInt(self.data.product.pickCount)) {
+          return "抽箱数必须是整数";
+        }
+        if (!utils.isInt(self.data.product.sjCount)) {
+          return "实际验货数量必须是整数";
+        }
+        if (!utils.isFloat(self.data.product.grossWeight)) {
+          return "单件毛重必须是数字";
+        }
+        if (!utils.isFloat(self.data.product.netWeight)) {
+          return "单件净重必须是数字";
+        }
+
+        return "";
+      },
+
+      getBoxSizeStr: function() {
+        return this.data.product.sizeObj.long + 'x' +  this.data.product.sizeObj.width + 'x'
+          + this.data.product.sizeObj.height;
+      },
+
+
+      uploadCompleteHandler: function() {
+        const that = this
+        let self = that;
+        self.data.addImages = utils.sortImages(self.data.addImages);
+        let addImageUrls = self.data.addImages.filter(item => { return !item.hasAddToDB }).map(item => item.fileName);
+        console.log('addImages:' + addImageUrls);
+        console.log('deleteImages: ' + self.data.deleteImages);
+
+        let queryParams = {
+          ticketNo: self.data.ticketNo,
+          contractNo: self.data.contractNo,
+          productNo: self.data.productNo,
+          spid: self.data.spid,
+
+          checkResult: self.data.product.checkResult,
+
+          totalCount: parseInt(self.data.product.totalCount),
+          pickCount: parseInt(self.data.product.pickCount),
+          sjCount: parseInt(self.data.product.sjCount),
+
+          boxSize: self.getBoxSizeStr(),
+          grossWeight: parseFloat(self.data.product.grossWeight),
+          netWeight: parseFloat(self.data.product.netWeight),
+          checkMemo: self.data.product.checkMemo,
+          checkAddress: self.data.gpsAddress,
+          username: utils.getMyUserName(),
+
+          addImages: utils.combineImageUrls(addImageUrls),
+          deleteImages: utils.combineImageUrls(self.data.deleteImages)
+        }
+        console.log(queryParams)
+        wx.request({
+          url: service.checkProductUrl(),
+          method: 'POST',
+          data: queryParams,
+          header: {
+            'content-type': 'application/json'
+          },
+          success: function (res) {
+            let items = self.data.items;
+            console.log("checkproduct response:", res);
+            wx.hideLoading();
+            if (res.data.status != 0) {
+              wx.showToast({
+                title: '不能重复提交验货',
+                duration: 3000
+              })
+            } else {
+              wx.showToast({
+                title: '验货成功',
+                duration: 3000
+              })
+
+              self.data.deleteImages = [];
+
+              //把审核的结果传递回前一个页面
+              let pages = getCurrentPages();
+              let curPage = pages[pages.length - 2];
+              curPage.updateCheckResult(self.data.productNo, self.data.product.spid, self.data.product.checkResult);
+
+              let prevPage = pages[0];
+              reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
+
+              
+              wx.navigateBack({
+                isCheckSuccess: true
+              }); 
+            }
+          },
+          fail: function (err) {
+            console.error(err)
+            wx.showToast({
+              title: '验货失败',
+              duration: 3000
+            })
+
+          },
+          complete: function () {
+          }
+        })
+      },
+
+      bindSubmitTap: function (e) {
+        const that = this.$wx
+
+        that.data.uploadImageError = false;
+        let errorMessage = that.checkBeforeTap();
+        if (errorMessage != "") {
+          wx.showModal({
+            content: errorMessage,
+            showCancel: false
+          })
+          return false;
+        }
+        var self = that;
+
+        let needUploadFiles = [];
+        for(var i = 0; i < that.data.files.length; i++) {
+          console.log(that.data.files[i])
+          let uploadFiles = that.data.files[i]
+            .filter((item) => {
+              return item.startsWith('http://tmp/') || item.startsWith('wxfile://')
+            })
+          uploadFiles.forEach(item => {
+            needUploadFiles.push([i, item])
+          })
+        }
+        
+        let imageCount = needUploadFiles.length;
+
+        if (imageCount > 0) {
+          wx.showLoading({
+            title: '上传中( ' + 1 + '/' + imageCount + ' )',
+          })
+        }
+
+        let formData = {
+          filesufix: '_' + that.data.ticketNo + '_' + that.data.contractNo
+        }
+        uploadFiles(needUploadFiles, that, that.uploadCompleteHandler, formData);
+      },
+
+      bindModifyZlkImagesTap: function(e) {
+        const that = this.$wx
+        wx.navigateTo({
+          url: './uploadbeforeassign?ticketNo=' + that.data.ticketNo + '&spid=' + that.data.spid + '&reloadFather=true' + '&contractNo='+that.data.contractNo,
+        })
+      },
+
+      bindOpenLinkTap: function(e) {
+        const that = this.$wx
+        wx.navigateTo({
+          url: './webview?ticketNo=' + that.data.ticketNo + '&spid=' + that.data.spid + '&productNo=' + that.data.productNo + '&contractNo=' + that.data.contractNo
+        })
+      } 
+    }
+  })
+</script>
+
+
+<config>
+  {
+    "usingComponents": {
+      "uploadImage": "../components/uploadImage",
+    },
+  }
+</config>

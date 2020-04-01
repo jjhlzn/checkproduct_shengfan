@@ -1,0 +1,58 @@
+<style>
+
+</style>
+
+<template>
+  <web-view src="{{url}}"></web-view>
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+  let service = require('../service').Service;
+
+
+  wepy.page({
+    data: {
+      title: '',
+      ticketNo: '',
+      contractNo: '',
+      productNo: '',
+      spid: '',
+      url: ''
+    },
+
+    methods: {
+      onLoad: function (options) {
+        const that = this.$wepy.$wx
+        console.log('options: ' + JSON.stringify(options))
+
+        that.setData({
+          ticketNo: options.ticketNo,
+          contractNo: options.contractNo,
+          productNo: options.productNo,
+          spid: options.spid,
+          url: service.getCheckReportUrl(options.ticketNo, options.contractNo, options.spid, options.productNo)
+        })
+        console.log(that.data.url)
+      },
+
+      onShow: function () {
+        const that = this.$wepy.$wx
+        wx.setNavigationBarTitle({
+          title: that.data.title,
+        })
+      },
+
+      /**
+       * 用户点击右上角分享
+       */
+      onShareAppMessage: function () {
+        const that = this.$wepy.$wx
+        return {
+          title: '验货结果',
+          path:  'pages/webview?ticketNo=' + that.data.ticketNo + '&spid=' + that.data.spid + '&productNo=' + that.data.productNo + '&contractNo=' + that.data.contractNo
+        }
+      }
+    }
+  })
+</script>

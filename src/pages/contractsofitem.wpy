@@ -1,0 +1,214 @@
+<style>
+.contractNo {
+  margin-top: 10px;
+}
+
+/* checkitem.wxss */
+.mini-btn {
+  margin-right: 5px;
+}
+
+.flexCellTitle {
+  width: 30%;
+  text-align: left;
+}
+
+.flexCellContent {
+  width: 70%;
+  text-align: right;
+}
+
+.weui-panel__bd .rowTitle {
+  background-color: lightgray;
+}
+
+.twoRowCell {
+  padding-top: 12px;
+}
+
+.checkItemCellRight {
+   width: 60%;
+   text-align: right;
+}
+
+.someChecked {
+  color: blue;
+}
+
+.allChecked {
+  color: green;
+}
+
+.noneChecked {
+  
+}
+
+</style>
+
+<template>
+  <view class="page">
+    <view class="page__bd">
+   
+            <view class="weui-cells weui-cells_after-title">
+              <view class=" weui-media-box weui-media-box_text">
+                    <view class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
+                      <view class="flex-view-item"> 合同号:   {{contract.contractNo}}</view>
+                    </view>
+
+                    <view class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
+                      <view class="flex-view-item"> 发票号:   {{contract.ticketNo}}</view>
+                    </view>
+
+                    <view class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
+                      <view class="flex-view-item checkItemCellLeft"> 发票注意事项:   {{(contract.orderAnnouncements && contract.orderAnnouncements != "null") ? contract.orderAnnouncements : "无"}} </view>
+                    </view>  
+
+                    <view class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
+                      <view class="flex-view-item checkItemCellLeft"> 合同注意事项:   {{(contract.contractAnnouncements && contract.contractAnnouncements != "null") ? contract.contractAnnouncements : "无"}} </view>
+                    </view>  
+              </view>
+
+            </view>
+           
+         
+            <view class="weui-cells__title">验货结果</view>
+            <view class="weui-cells weui-cells_after-title">
+              <view class="weui-cell">
+                <view class="weui-cell__bd">验货状态</view>
+                <view class="weui-cell__ft">{{!contract.checkResult || contract.checkResult == 'null'  ? "未验货" : contract.checkResult}}</view>
+              </view>
+              <view class="flex-row weui-cell" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
+                <view class="weui-cell__bd flexCellTitle">验货备注</view>
+                <view class="weui-cell__ft flexCellContent"> {{!contract.checkMemo || contract.checkMemo == 'null' ?  "" : contract.checkMemo}}</view>
+              </view>
+              
+            </view>  
+
+           
+            <view class="weui-btn-area" >
+              <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindNextTap">下一步</button>
+            </view> 
+
+            <view class="weui-btn-area" >
+               <button type="default" hover-class="other-button-hover"  bindtap="bindCheckTap">整单验货</button>
+            </view> 
+
+          </view>
+</view>
+
+</template>
+
+<script>
+
+  import wepy from '@wepy/core'
+  const service = require('../service').Service
+
+  wepy.page({
+      data: {
+        ticketNo: "",
+        contractNo: "",
+        contract: {}
+      },
+
+      methods: {
+        onLoad: function (options) {
+          console.log("options: " + JSON.stringify(options));
+          this.setData({
+              ticketNo: options.id,
+              contractNo: options.contractNo
+            
+          })
+          this.loadData();
+        },
+
+        /**
+         * 生命周期函数--监听页面显示
+         */
+        onShow: function () {
+          wx.setNavigationBarTitle({
+            title: '采购合同号',
+          })
+
+          this.loadData()
+          
+        },
+
+        loadData: function() {
+          console.log('加载合同信息')
+          var self = this;
+          if (this.data.loading) {
+            console.log("正在加载数据中")
+            return;
+          }
+          wx.showLoading({
+            title: '',
+          })
+          wx.request({
+            url: service.getContractInfoUrl(),
+            method: "POST",
+            data: {
+              ticketNo: self.data.ticketNo,
+              contractNo: self.data.contractNo
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            success: function (res) {
+              console.log(res);
+              if (res.data.status != 0) {
+                wx.showToast({
+                  title: '加载失败',
+                })
+                return;
+              }
+              self.setData({ contract: res.data.contract});
+            },
+            fail: function (err) {
+              console.error(err)
+              wx.showToast({
+                title: '加载失败',
+              })
+            },
+            complete: function () {
+              wx.hideLoading()
+              self.setData({ loading: false });
+            }
+          })
+        },
+
+        updateCheckResult: function (ticketNo, checkResult) {
+          console.log('updateCheckResult: ' + ticketNo + " = " + ticketNo + ', checkResult =  '
+            + checkResult);
+          this.data.contract.checkResult = checkResult;
+          this.setData({
+            contract: this.data.contract
+          });
+        },
+
+        bindNextTap: function (e) {
+          const that = this.$wx
+          let contractNo = that.data.contractNo;
+          if (!contractNo) {
+            wx.showToast({
+              title: '合同号不能为空',
+              duration: 3000,
+              image: '../icons/error.png'
+            })
+            return;
+          }
+
+          wx.navigateTo({
+            url: './checkitem?ticketNo='+that.data.ticketNo+'&contractNo=' + contractNo,
+          })
+        },
+
+        bindCheckTap: function () {
+          const that = this.$wx
+          wx.navigateTo({
+            url: './check?ticketNo=' + that.data.ticketNo + '&contractNo=' + that.data.contractNo,
+          })
+        }
+      }
+  })
+
+</script>

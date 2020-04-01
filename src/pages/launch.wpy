@@ -1,0 +1,34 @@
+<style>
+
+</style>
+
+<template>
+  
+</template>
+
+<script>
+import wepy from '@wepy/core'
+
+wepy.page({
+    onLoad: function (options) {
+
+      wx.getSystemInfo({
+    　　success: function ( res ){
+    　　  console.log( res ); 
+        }
+      })
+      
+      let loginUser = wx.getStorageSync('loginUser');
+      console.log('loginUser: ', loginUser);
+      if (loginUser) {
+        wx.reLaunch({
+          url: './all',
+        });
+      } else {
+        wx.redirectTo({
+          url: './login',
+        })
+      }
+  },
+})
+</script>

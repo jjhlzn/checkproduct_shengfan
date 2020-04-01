@@ -1,0 +1,287 @@
+<style>
+  .contractNo {
+    margin-top: 10px;
+  }
+
+  /* checkitem.wxss */
+  .mini-btn {
+    margin-right: 5px;
+  }
+
+  .flexCellTitle {
+    width: 30%;
+    text-align: left;
+  }
+
+  .twoRowCell {
+    padding-top: 12px;
+  }
+
+  .flexCellContent {
+    width: 70%;
+    text-align: right;
+  }
+
+  .weui-panel__bd .rowTitle {
+    background-color: lightgray;
+  }
+
+  .mybutton {
+    color: black;
+    width: 100%;
+    height: 40px;
+    text-align: center;
+    vertical-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  /* padding-top: 10px; */
+    padding-bottom: 2px;
+    border-left: 2px solid black;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    background-color: rgba(78, 179, 208, 1)
+    
+  }
+
+  .mybutton-rightest {
+    border-right: 2px solid black;
+  }
+
+  .myrow2 {
+    margin: 0px;
+    padding: 0px;
+  }
+
+  .firstColumn {
+    width: 40%;
+  }
+
+  .secondColumn {
+    width: 20%;
+  }
+
+  .checkItemCellRight {
+    width: 40%;
+    text-align: right;
+  }
+  .mybutton button {
+    margin:  0;
+    padding: 0;
+    height: 40px;
+    border: solid 0px red;
+    background-color: rgba(0, 0, 0, 0);
+  }
+
+  button.selectedButton {
+    color: white;
+  }
+</style>
+
+<template>
+  <view class="page">
+    <view class="page__bd">
+      <view class="weui-panel weui-panel_access">
+          
+
+          <view class="weui-panel__bd">
+
+            <view class=" weui-media-box weui-media-box_text myrow2">
+                  <view class="flex-row myrow myrow2">
+                    <view class="flex-view-item mybutton"> <button class="{{selectedType == '全部'? 'selectedButton' : ''}}" bindtap="allTap">全部 </button></view>
+                    <view class="flex-view-item mybutton"> <button class="{{selectedType == '合格'? 'selectedButton' : ''}}" bindtap="qualifyTap">合格 </button>  </view>
+                    <view class="flex-view-item mybutton"> <button class="{{selectedType == '不合格'? 'selectedButton' : ''}}" bindtap="notQualifyTap">不合格 </button>  </view>
+                    <view class="flex-view-item mybutton .mybutton"> <button class="{{selectedType == '担保出货'? 'selectedButton' : ''}}" bindtap="tbdTap"> 担保出货 </button>  </view>
+                     <view class="flex-view-item mybutton .mybutton-rightest"> <button  bindtap="bindRecheckTap"> 装柜照 </button>  </view>
+                  </view>
+              </view>
+
+            <view class=" weui-media-box weui-media-box_text">
+                  <view class="flex-row myrow" >
+                    <view class="flex-view-item firstColumn" > 
+                         <view style="flex-direction:column;">
+                            <view class="flex-view-item ">合同号</view>
+                            <view class="flex-view-item ">货号</view>
+                          </view>
+                    </view>
+                     <view class="flex-view-item twoRowCell secondColumn"> 
+                        <p>验货结果</p>
+                    </view>
+                     <view class="flex-view-item checkItemCellRight"> 
+                        <p ></p>
+                    </view>
+                  </view>
+            </view>
+
+            <view v-for="(item, index) in products"  @tap="bindItemTap(item)"  class=" weui-media-box weui-media-box_text"  v-bind:key="'product_'+index">
+                <view class="flex-row myrow">
+                  <view class="flex-view-item firstColumn" > 
+                        <view style="flex-direction:column;">
+                          <view class="flex-view-item ">{{item.contractNo}}</view>
+                          <view class="flex-view-item ">{{item.productNo}}</view>
+                        </view>
+                  </view>
+                  <view class="flex-view-item twoRowCell secondColumn"> 
+                     {{item.checkResult == null || item.checkResult == "" ? "未验货" : item.checkResult}}
+                  </view>
+                  <view class="flex-view-item checkItemCellRight" > 
+                        <view style="flex-direction:column;">
+                          <view class="flex-view-item ">验货员 <span class="peopleName">{{item.checker}}</span></view>
+                          <view class="flex-view-item ">跟单员  <span class="peopleName">{{item.tracker}}</span></view>
+                        </view>
+                  </view>
+                </view>
+            </view>
+
+            <view > 
+              <view class="weui-loadmore" wx:if="{{loading}}">
+                  <view class="weui-loading"></view>
+                  <view class="weui-loadmore__tips">正在加载</view>
+              </view>
+            </view>
+       
+            
+            
+        </view>
+
+         <view class="weui-panel__bd" wx:if="{{!loading && (products.length === 0)}}">
+              <view class="weui-loadmore weui-loadmore_line noDataCell">
+                  <view class="weui-loadmore__tips weui-loadmore__tips_in-line">暂无数据</view>
+              </view>
+          </view>
+      </view>
+    </view>
+</view>
+
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+  const service = require('../service').Service
+  import { checkPermission } from '../model/user.js';
+
+  wepy.page({
+      data: {
+        loading: false,
+        selectedType: '全部',
+        ticketNo: '',
+        contractNo: '',
+        products: []
+      },
+
+      methods: {
+        onLoad: function (options) {
+          const that = this.$wepy.$wx
+          that.setData({
+            ticketNo: options.id,
+            contractNo: options.contractNo
+          });
+        },
+
+        /**
+         * 生命周期函数--监听页面显示
+         */
+        onShow: function () {
+          const that = this.$wepy.$wx
+          wx.setNavigationBarTitle({
+            title: '验货详情',
+          })
+          that.loadData();
+        },
+
+        allTap: function() {
+          this.changeSelectedType('全部')
+        },
+        qualifyTap: function() {
+          this.changeSelectedType('合格')
+        },
+        notQualifyTap: function() {
+          this.changeSelectedType('不合格')
+        },
+        tbdTap: function() {
+          this.changeSelectedType('担保出货')
+        },
+
+        changeSelectedType: function(selectedType) {
+          const that = this.$wx
+          console.log(this)
+          console.log('selectedType: ' + selectedType)
+          that.setData({
+            selectedType: selectedType,
+            products: []
+          })
+          that.loadData();
+        },
+
+        loadData: function () {
+          let self = this;
+          const that = self
+          that.setData({
+            loading: true
+          })
+          wx.request({
+            url: service.getProductsUrl(),
+            method: "POST",
+            data: {
+              ticketNo: self.data.ticketNo,
+              contractNo: self.data.contractNo,
+              checkResult: self.data.selectedType
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            success: function (res) {
+              console.log("res:", res);
+              if (res.data.status != 0) {
+                wx.showToast({
+                  title: '加载失败',
+                })
+                return;
+              }
+              let products = res.data.products;
+              self.setData({ products: products});
+            },
+            fail: function (err) {
+              console.error(err)
+              wx.showToast({
+                title: '加载失败',
+              })
+            },
+            complete: function () {
+              self.setData({ loading: false });
+            }
+          })
+        },
+
+        updateCheckResult: function(productNo, checkResult) {
+          let product = this.data.products.filter(product => product.productNo == productNo)[0];
+          if (product) {
+            product.checkResult = checkResult;
+            this.setData({products: this.data.products});
+          }
+        },
+
+        bindItemTap: function (product) {
+          const that = this.$wx
+          console.log(product);
+
+          if (!product.contractNo) {
+            wx.showToast({
+              title: '合同号不能为空'
+            })
+            return;
+          }
+          wx.navigateTo({
+            url: './checkproduct?ticketNo=' + that.data.ticketNo + '&contractNo=' + product.contractNo + '&productNo=' + product.productNo + '&spid=' + product.spid,
+          })
+        },
+
+        bindRecheckTap: function(e) {
+          const that = this.$wx
+          wx.navigateTo({
+            url: './check?ticketNo=' + that.data.ticketNo + '&contractNo='+that.data.contractNo,
+          })
+        }
+      }
+
+  })
+</script>

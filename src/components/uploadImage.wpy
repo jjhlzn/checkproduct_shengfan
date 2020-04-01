@@ -1,0 +1,133 @@
+<style lang="less">
+  @import "../style/component.wxss";
+</style>
+
+
+<template>
+  <div>
+    <view class="weui-cells__title">{{title}}</view>
+    <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell">
+            <view class="weui-uploader__bd">
+                  <view class="weui-uploader__files"  >
+                        <block v-for="(item, index) in files"  v-bind:key="'file_'+index">
+                          <view class="weui-uploader__file" bindtouchend="touchend"  @longtap="bindLongImageTap(index)" @tap="previewImage(index)"  >
+                              <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                          </view>
+                        </block>
+
+                    <view class="weui-uploader__input-box">
+                      <view class="weui-uploader__input" bindtap="chooseImage"></view>
+                    </view>
+                  </view>
+    
+              </view>
+        </view>
+    </view>
+    </div>
+</template>
+
+<script>
+  import wepy from '@wepy/core'
+
+  wepy.component({
+    data: {
+      title: "",
+      files: [],
+      deleteImages: [],
+      addImages: [], 
+      index: 0,
+    },
+
+    props: ["title", "files", "deleteImages", "addImages", "index"],
+
+    methods: {
+
+      chooseImage: function (e) {
+        var self = this
+        const that = this.$wx
+      
+        wx.chooseImage({
+          sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+          sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+          success: function (res) {
+            // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
+            that.data.files = that.data.files.concat(res.tempFilePaths)
+            that.setData({
+              files: that.data.files
+            });
+            self.$emit('setfiles', {index:  that.data.index, files: that.data.files})
+          }
+        })
+      },
+
+      previewImage: function (index) {
+        const that = this.$wx
+        if (that.data.lock) {
+          return;
+        }
+        //console.log(this.data.files)
+        wx.previewImage({
+          current: that.data.files[index] + "?notCompress=true", // 当前显示图片的http链接
+          urls: that.data.files.map( url => url + "?notCompress=true") // 需要预览的图片http链接列表
+        })
+      },
+
+
+      touchend: function (e) {
+        const that = this.$wx
+        if (that.data.lock) {
+          setTimeout(() => {
+            that.setData({
+              lock: false
+            })
+          }, 100)
+        }
+      },
+
+      getImageUrl: function(page, index) {
+        console.log(this)
+        const that = page
+        return that.data.files[index];
+      },
+
+      //传入按键事件，将所点按的图片删除
+      removeImage: function (vm, page, index) {
+        const that = page
+        let url = that.data.files.splice(index, 1);
+        console.log("delete image: " + url);
+        that.setData({ files: that.data.files });
+        vm.$emit('setfiles', {index:  that.data.index, files: that.data.files})
+      },
+
+      bindLongImageTap: function (index) {
+        console.log('long tap handler')
+        const vm = this
+        let self = this.$wx;
+        self.setData({
+          lock: true
+        });
+        wx.showModal({
+          title: '',
+          content: '删除该图片？',
+          success: function (res) {
+            if (res.confirm) {
+              console.log('用户点击确定')
+              let url = self.getImageUrl(self, index);
+              self.removeImage(vm, self, index);
+              console.log('url: ' + url);
+              if (!url.startsWith('http://tmp/') && !url.startsWith('wxfile://')) {
+                //self.data.deleteImages.push(url);
+                vm.$emit('adddeletefile', {url:  url})
+              }
+
+            } else if (res.cancel) {
+              console.log('用户点击取消')
+            }
+          }
+        })
+      },
+
+    }
+  })
+</script>

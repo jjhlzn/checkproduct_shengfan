@@ -1,0 +1,189 @@
+<style>
+  .mini-btn {
+    margin-right: 5px;
+  }
+
+  .flexCellTitle {
+    width: 30%;
+    text-align: left;
+  }
+
+  .flexCellContent {
+    width: 70%;
+    text-align: right;
+  }
+
+</style>
+
+<template>
+    <view class="page">
+      <view class="page__bd">
+          <view class="weui-cells__title">验货单属性</view>
+          <view class="weui-cells weui-cells_after-title">
+              <view class="weui-cell" >
+                  <view class="weui-cell__bd">发票号</view>
+                  <view class="weui-cell__ft">{{contract.ticketNo}}</view>
+              </view>
+              <view class="weui-cell" >
+                  <view class="weui-cell__bd">采购合同</view>
+                  <view class="weui-cell__ft">{{contract.contractNo}}</view>
+              </view>
+              <view class="weui-cell" >
+                  <view class="weui-cell__bd">进仓编号</view>
+                  <view class="weui-cell__ft">{{contract.jinCangNo ? contract.jinCangNo : "-"}}</view>
+              </view>
+              <view class="weui-cell" >
+                  <view class="weui-cell__bd">跟单员</view>
+                  <view class="weui-cell__ft">{{contract.tracker}}</view>
+              </view>
+              <view class="weui-cell" >
+                  <view class="weui-cell__bd">验货员</view>
+                  <view class="weui-cell__ft">{{contract.checker}}</view>
+              </view>
+              
+          </view>
+
+          <view class="weui-cells__title">货号</view>
+          <view class="weui-cells weui-cells_after-title">
+              <div v-for="item in contract.products " url="" @tap="bindProductTap(item)" class="weui-cell weui-cell_access" 
+              v-bind:key="item.spid" hover-class="weui-cell_active" >
+                  <view class="weui-cell__bd">{{item.productNo}}{{ item.sku != null && item.sku != "" ? "(" + item.sku + ")" : ""}}({{item.name}})</view>
+                  <!-- <view class="weui-cell__ft weui-cell__ft_in-access"></view> -->
+                  <view class="weui-cell__ft weui-cell__ft_in-access" >{{item.checkResult == null || item.checkResult == "" ? "未完成" : item.checkResult}}</view>
+              </div>
+              
+          </view>
+
+      </view>
+  </view>
+
+</template>
+
+<script>
+
+  import wepy from '@wepy/core'
+  let service = require('../service').Service;
+  import { checkPermission } from '../model/user.js';
+
+  wepy.page({
+      data: {
+        ticketNo: "",
+        contractNo: "",
+        contract: {
+        }
+      },
+
+      methods: {
+        onLoad: function (options) {
+          this.setData({ticketNo: options.ticketNo, contractNo: options.contractNo});
+          this.loadData();
+        },
+
+        loadData: function() {
+          var self = this;
+          console.log("加载checkitem");
+          wx.showLoading({
+            title: '加载中',
+          })
+          wx.request({
+            url: service.getContractInfoUrl(),
+            method: "POST",
+            data: {
+              ticketNo: self.data.ticketNo,
+              contractNo: self.data.contractNo
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            complete: function (res) {
+              wx.hideLoading()
+              console.log(res);
+              if (res.data.status != 0) {
+                wx.showToast({
+                  title: '加载失败',
+                })
+                return;
+              }
+              self.setData({
+                contract: res.data.contract
+              })
+            },
+            fail: function (err) {
+              wx.hideLoading()
+              wx.showToast({
+                title: '加载失败',
+              })
+            }
+          })
+        },
+
+        /**
+         * 生命周期函数--监听页面初次渲染完成
+         */
+        onReady: function () {
+          checkPermission()
+        },
+
+        /**
+         * 生命周期函数--监听页面显示
+         */
+        onShow: function () {
+          wx.setNavigationBarTitle({
+            title: '验货单',
+          })
+        },
+
+        bindCheckTap: function() {
+          wx.navigateTo({
+            url: '../contractsofitem/contractsofitem',
+          })
+        },
+
+        updateCheckResult: function(productNo, spid, checkResult) {
+          //console.log("updateCheckResult called: " + productNo);
+          //console.log(JSON.stringify(this.data.contract));
+          this.data.contract.products.forEach(product => {
+            if (product.productNo == productNo && product.spid == spid) {
+              product.checkResult = checkResult;
+              console.log("find " + productNo + ", checkResult:  " + checkResult);
+            }
+          })
+
+          this.setData({
+            contract: this.data.contract
+          });
+
+          let pages = getCurrentPages();
+          let curPage = pages[pages.length - 3];
+          curPage.loadData()
+
+        },
+
+        bindFileTap: function(e) {
+          var url2 = service.getCheckFileUrl();
+          console.log("url: ", url2);
+          wx.previewImage({
+            current: url2, // 当前显示图片的http链接
+            urls: [url2] // 需要预览的图片http链接列表
+          })
+        },
+
+        bindProductTap: function(item) {
+          const that = this.$wx
+          console.log(item)
+          wx.navigateTo({
+            url: './checkproduct?ticketNo=' + that.data.ticketNo + '&contractNo=' + that.data.contract.contractNo + '&productNo=' + item.productNo + '&spid='+item.spid,
+          })
+        }, 
+
+        /**
+       * 下拉刷新处理
+       */
+        onPullDownRefresh: function () {
+          wx.stopPullDownRefresh()
+        },
+      }
+      
+  })
+
+</script>

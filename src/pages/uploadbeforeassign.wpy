@@ -1,0 +1,258 @@
+<style>
+
+</style>
+<template>
+
+
+<view class="page" xmlns:wx="http://www.w3.org/1999/xhtml">
+   
+    <view class="page__bd">
+
+        <uploadImage v-bind:files="files" v-on:setfiles="setfiles" v-on:adddeletefile="adddeletefile"
+          title="图片上传" ></uploadImage>
+
+        <view class="weui-btn-area" wx:if="{{loginUser.role == 'checker' || loginUser.role == 'checker_manager'}}">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+        </view>
+    </view>
+</view>
+</template>
+<script>
+  import wepy from '@wepy/core'
+  let service = require('../service').Service;
+  let uploadFiles = require('../logic/upload').uploadFiles;
+  let utils = require('../utils').utils;
+  import { checkPermission } from '../model/user.js';
+
+  wepy.page({
+    data: {
+      loginUser: {},
+      maxUploadCount: 3,
+      lock: false,
+      uploadedCount: 0,
+      
+      ticketNo: "",
+      spid: "",
+      contractNo: "",
+      reloadFather: false,
+
+      files: [],
+      deleteImages: [],
+      addImages: [],
+      uploadImageError: false,
+
+      isCheckResultChange: false,
+      hasPermission: false
+    },
+
+    methods: {
+
+      setfiles: function(obj){
+        const that = this.$wx
+        const tmpFiles = obj.files
+        that.data.files = tmpFiles
+      },
+
+      adddeletefile: function(obj){
+        const that = this.$wx
+        that.data.deleteImages.push(obj.url)
+      },
+
+      onLoad: function (options) {
+        console.log('options: ' + JSON.stringify(options))
+
+        this.setData({
+          ticketNo: options.ticketNo,
+          spid: options.spid,
+          contractNo: options.contractNo,
+          reloadFather: options.reloadFather,
+          loginUser: wx.getStorageSync("loginUser"),
+        })
+
+        console.log(this.data.loginUser)
+        
+        var self = this;
+        wx.showLoading({
+          title: '加载中',
+        })
+        wx.request({
+          url: service.getProductInfoUrl(),
+          method: 'POST',
+          data: {
+            ticketNo: self.data.ticketNo,
+            spid: self.data.spid,
+            contractNo: self.data.contractNo,
+          },
+          header: {
+            'content-type': 'application/json'
+          },
+          complete: function (res) {
+            wx.hideLoading()
+            console.log(res);
+            if (res.data.status != 0) {
+              wx.showToast({
+                title: '加载失败',
+              })
+              return;
+            }
+
+            
+
+            let files = res.data.product.zlkUrls;
+            let urls = files.map(file => service.makeImageUrl(file));
+            self.setData({
+              files: urls
+            })
+
+          },
+          fail: function (err) {
+            wx.hideLoading()
+            wx.showToast({
+              title: '加载失败',
+            })
+          }
+        })
+      },
+
+      setCheckMemo: function (e) {
+        this.data.checkMemo = e.detail.value;
+      },
+
+
+      /**
+       * 生命周期函数--监听页面显示
+       */
+      onShow: function () {
+        wx.setNavigationBarTitle({
+          title: '上传图片',
+        })
+        checkPermission()
+      },
+
+      checkBeforeTap: function () {
+        return "";
+      },
+
+      uploadCompleteHandler: function () {
+        console.log("uploadCompleteHandler")
+        let self = this;
+
+        let addImageUrls = self.data.addImages.filter(item => { return !item.hasAddToDB }).map(item => item.fileName);
+
+        console.log('addImages:' + addImageUrls);
+        console.log('deleteImages: ' + self.data.deleteImages);
+
+        var formData = {
+          ticketNo: self.data.ticketNo,
+          contractNo: self.data.contractNo,
+          spid: self.data.spid,
+          username: utils.getMyUserName(),
+          addImages: utils.combineImageUrls(addImageUrls),
+          deleteImages: utils.combineImageUrls(self.data.deleteImages)
+        }
+        console.log(JSON.stringify(formData))
+        wx.request({
+          url: service.saveZiliaoUrl(),
+          method: 'POST',
+          data: formData,
+          header: {
+            'content-type': 'application/json'
+          },
+          success: function (res) {
+            //let items = self.data.items;
+            console.log("save zlk image response:", res);
+            wx.hideLoading();
+            if (res.data.status != 0) {
+              wx.showToast({
+                title: '保存失败',
+                duration: 3000
+              })
+            } else {
+              wx.showToast({
+                title: '保存成功',
+                duration: 3000
+              })
+
+              console.log("self.data.reloadFather: " + self.data.reloadFather)
+              if (self.data.reloadFather === true) {
+                let pages = getCurrentPages();
+                let curPage = pages[pages.length - 2];
+                console.log(curPage)
+                curPage.reload();
+              }
+
+              wx.navigateBack({
+                
+              })
+            }
+          },
+          fail: function (err) {
+            console.error(err)
+            wx.showToast({
+              title: '验货失败',
+              duration: 3000
+            })
+
+          },
+          complete: function () {
+          }
+        })
+      },
+
+      bindSubmitTap: function (e) {
+        const that = this.$wx
+        that.data.uploadImageError = false;
+        let errorMessage = that.checkBeforeTap();
+        if (errorMessage != "") {
+          wx.showModal({
+            content: errorMessage,
+            showCancel: false
+          })
+          return false;
+        }
+        var self = that;
+        //上传图片，使用对话框提示，图片上传完之后，提交验货结果
+        //过滤不需要进行上传的图片
+        that.data.files.forEach(item => {
+          console.log("item: " + item);
+        })
+        let needUploadFiles = that.data.files
+          .filter((item) => {
+            return item.startsWith('http://tmp/') || item.startsWith('wxfile://')
+          })
+          .filter((item) => {
+            let needAdd = true;
+            self.data.addImages.forEach(x => {
+              console.log("item: " + item);
+              console.log("x.originName: " + x.originName);
+              if (item == x.originName && x.hasAddToDB) {
+                needAdd = false;
+              }
+            })
+            return needAdd;
+          });
+
+        console.log("needUploadFiles: " + needUploadFiles);
+
+        let imageCount = needUploadFiles.length;
+
+        if (imageCount > 0) {
+          wx.showLoading({
+            title: '上传中( ' + 1 + '/' + imageCount + ' )',
+          })
+        }
+        uploadFiles(needUploadFiles, that, that.uploadCompleteHandler);
+      },
+
+    }
+  })
+</script>
+
+
+<config>
+  {
+    "usingComponents": {
+      "uploadImage": "../components/uploadImage",
+    },
+  }
+</config>
