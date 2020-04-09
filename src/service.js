@@ -1,11 +1,11 @@
 class Service {
   constructor() {
     this.isTest = true
-    this.isLocal = false
+    this.isLocal = true
     if (this.isLocal) {
-      this.http = 'https'
+      this.http = 'http'
       this.host = 'localhost'
-      this.port = ':44300'
+      this.port = ':2002'
       this.prefix = ''
     } else {
       if (this.isTest) {

@@ -79,6 +79,11 @@ wepy.app({
       'pages/check',
       'pages/me',
     ],
+     "permission": {
+        "scope.userLocation": {
+          "desc": "你的位置信息将用于验货地址" // 高速公路行驶持续后台定位
+        }
+      },
     tabBar: {
       list: [ 
         {
