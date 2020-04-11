@@ -21,7 +21,10 @@
             <view class="weui-cell__ft">{{loginUser.roleName}}</view>
         </view>
 
-
+        <view class="weui-cell"  @tap="tapModifyPassword()">
+            <view class="weui-cell__bd">修改密码</view>
+            <view class="weui-cell__ft">></view>
+        </view>
     </view>
 
     <view class="weui-btn-area">
@@ -58,6 +61,11 @@
         })
       },
 
+      tapModifyPassword: function() {
+         wx.navigateTo({
+              url: './modifypassword',
+            }) 
+      },
 
       bindLogoutTap: function() {
         wx.setStorageSync('loginUser', undefined);

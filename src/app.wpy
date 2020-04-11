@@ -78,6 +78,7 @@ wepy.app({
       'pages/webview',
       'pages/check',
       'pages/me',
+      'pages/modifypassword',
     ],
      "permission": {
         "scope.userLocation": {

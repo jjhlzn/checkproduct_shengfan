@@ -26,6 +26,10 @@ class Service {
     return `${this.http}://${this.host}${this.port}/login${this.prefix}`
   }
 
+  modifyPasswordUrl() {
+    return `${this.http}://${this.host}${this.port}/modifypassword${this.prefix}`
+  }
+
   uploadFileUrl() {
     return `${this.http}://${this.host}${this.port}/upload${this.prefix}`
   }
