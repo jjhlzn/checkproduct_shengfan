@@ -208,7 +208,7 @@ wepy.page({
           console.log(res.data.user)
           
           wx.reLaunch({
-            url: './all',
+            url: './notchecklist',
           }); 
         },
         fail: function(res) {

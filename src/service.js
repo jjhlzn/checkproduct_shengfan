@@ -1,7 +1,7 @@
 class Service {
   constructor() {
     this.isTest = true
-    this.isLocal = true
+    this.isLocal = false
     if (this.isLocal) {
       this.http = 'http'
       this.host = 'localhost'

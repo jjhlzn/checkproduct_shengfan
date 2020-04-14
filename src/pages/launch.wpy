@@ -22,7 +22,7 @@ wepy.page({
       console.log('loginUser: ', loginUser);
       if (loginUser) {
         wx.reLaunch({
-          url: './all',
+          url: './notchecklist',
         });
       } else {
         wx.redirectTo({

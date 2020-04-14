@@ -11,7 +11,7 @@
         <uploadImage v-bind:files="files" v-on:setfiles="setfiles" v-on:adddeletefile="adddeletefile"
           title="图片上传" ></uploadImage>
 
-        <view class="weui-btn-area" wx:if="{{loginUser.role == 'checker' || loginUser.role == 'checker_manager'}}">
+        <view class="weui-btn-area">
             <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
         </view>
     </view>
