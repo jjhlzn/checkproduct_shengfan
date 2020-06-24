@@ -63,7 +63,6 @@ wepy.app({
 {
     pages: [
       'pages/launch', 
-      'pages/intro',
       'pages/login',
       'pages/all',
 
