@@ -1,0 +1,165 @@
+<style>
+page {  
+ /* background-color:  rgba(77, 178, 208, 0.8);  */
+  
+}  
+.loginDiv {
+  /*background-color: white; */
+  margin-top: 100px;
+  margin-left:  10%;
+  margin-right: 10%;
+}
+
+.loginButton {
+  font-size: 1.7em;
+  color: white;
+  background-color: rgba(210, 88, 63, 0.9);
+  margin-top: 10%;
+}
+
+.logoDiv {
+  margin-top: 100px;
+  margin-bottom: 30px;
+  padding-top: 20px;
+}
+
+.logo {
+   text-align: center;
+   width: 40%;
+   margin: auto;
+   display: block;
+}
+
+.bottomDiv {
+  text-align: center;
+  font-size: 14px;
+  font-weight: normal;
+  color: white;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 5%;
+  margin-bottom: 10px;
+}
+
+.login {
+  position: relative;
+  top: 50%;
+  width: 250px;
+  display: table;
+  margin: -150px auto 0 auto;
+  background: #fff;
+  border-radius: 4px;
+}
+.legend {
+  position: relative;
+  width: 100%;
+  display: block;
+  background: #FF7052;
+  padding: 15px;
+  color: #fff;
+  font-size: 20px;
+}
+.legend:after {
+  content: "";
+  background-image: url(http://simpleicon.com/wp-content/uploads/multy-user.png);
+  background-size: 100px 100px;
+  background-repeat: no-repeat;
+  background-position: 152px -16px;
+  opacity: 0.06;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+}
+.inputView {
+  position: relative;
+  width: 90%;
+  margin: auto;
+  margin-top: 10px;
+  
+}
+.inputView label {
+  position: absolute;
+  display: block;
+  color: #d4d4d4;
+  left: 10px;
+  top: 14px;
+  font-size: 18px; 
+}
+.inputView input {
+  padding: 10px 5px 10px 40px;
+  display: block;
+  border: 2px solid rgba(77, 178, 208, 0.8);  
+  border-radius: 4px;
+  transition: 0.2s ease-out;
+  color: #a1a1a1;
+}
+.inputView input:focus {
+  padding: 10px 5px 10px 10px;
+  outline: 0;
+  border-color: #FF7052;
+}
+
+.page__bd {
+  padding-bottom: 14px;
+}
+ 
+</style>
+
+<template>
+  <view class="page wholePage" xmlns:wx="http://www.w3.org/1999/xhtml">
+
+
+  <view class="page__bd loginDiv">
+    
+     <view >
+     <view class="logoDiv">
+      <image src="../images/logo.jpg" class="logo" mode="widthFix"/>
+      </view>
+    </view>
+
+    <view>
+
+        该小程序为提供浙江省纺织品进出口集团有限公司提供验货服务，需要使用您在省纺ERP系统的账号和密码进行登录。
+        该小程序不会使用您的微信账号的任何信息。
+     
+    </view>
+     <view class="weui-btn-area">
+          <button class=" loginButton" @tap="tapLogin">前往登录  </button>
+      </view>
+    
+      
+  </view>
+
+  <view class="bottomDiv bottomLabel">
+      <label>技术支持：杭州全顺科技有限公司</label>
+  </view>
+
+</view>
+</template>
+
+<script>
+
+import wepy from '@wepy/core'
+const service = require('../service').Service;
+
+wepy.page({
+  data: {
+      inputmodel: 'v-model',
+      username: '',
+      password: '',
+  },
+  methods: {
+    tapLogin() {
+       wx.reLaunch({
+            url: './login',
+       }); 
+    }
+  }
+})
+
+</script>
+
+
