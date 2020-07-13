@@ -36,7 +36,7 @@
           title="图片上传" ></uploadImage>
         
         <view class="weui-btn-area" >
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+            <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
         </view>
     </view>
 </view>
@@ -56,6 +56,7 @@
       inputmodel: 'v-model',
       loginUser: {},
       maxUploadCount: 3,
+      canEdit: false,
       lock: false,
       uploadedCount: 0,
       radioItems: [
@@ -155,7 +156,8 @@
               files: urls,
               radioItems: self.data.radioItems,
               checkResult: checkResult,
-              checkMemo: res.data.contract.checkMemo
+              checkMemo: res.data.contract.checkMemo,
+              canEdit: res.data.contract.checkerId == self.data.loginUser.username || self.data.loginUser.role == 'checker_manager'
             })
 
           },

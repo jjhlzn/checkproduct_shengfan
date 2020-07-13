@@ -212,15 +212,15 @@
         </view>
 
         <view class="weui-btn-area" >
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+            <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
         </view>
 
         <view class="weui-btn-area" >
-            <button class="weui-btn" style="background-color: #e64340;" type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
+            <button class="weui-btn" style="background-color: #e64340;"  wx:if="{{canEdit}}"  type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
         </view>
 
         <view class="weui-btn-area">
-            <button type="default" hover-class="other-button-hover"  bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
+            <button type="default" hover-class="other-button-hover"  wx:if="{{canEdit}}"   bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
           </view> 
 
 
@@ -251,6 +251,7 @@
       inputmodel: "v-model",
       test: "testvalue",
       loginUser: {},
+      canEdit: false,
       maxUploadCount: 3,
       lock: false,     
       uploadedCount: 0,
@@ -452,6 +453,7 @@
               product: res.data.product,
               files: urls,
               radioItems: self.data.radioItems,
+              canEdit: res.data.product.checkerId == self.data.loginUser.username || self.data.loginUser.role == 'checker_manager'
             })
 
             if (!found) {
