@@ -1,0 +1,56 @@
+<style>
+</style>
+
+<template>
+  <view class="page">
+    <view class="page__bd">
+        <searchbar v-bind:queryParams="queryParams" v-bind:status="status"></searchbar>
+
+        <checkorder-list v-bind:items="items" v-bind:loading="loading"
+          v-bind:isLoadAll="isLoadAll"
+          v-bind:totalCount="totalCount"
+          v-bind:status="status"></checkorder-list>
+    </view>
+</view>
+</template>
+
+<script>
+
+  import wepy from '@wepy/core'
+  const utils = require('../utils').utils;
+  const reset = require('../dataloader2').reset
+  const loadData = require('../dataloader2').loadData
+  import CheckOrderListMixin from '../mixins/checkorderlist'
+
+  wepy.page({
+
+      data: {
+        status: '未验货'
+      },
+
+      mixins: [CheckOrderListMixin],
+
+      methods: {
+
+        onShow: function () {
+          utils.onShowHandler(this, utils.isNeedReloadNotCheckListKey, reset, loadData)
+          wx.setNavigationBarTitle({
+            title: '待接单列表',
+          })
+        },
+
+
+      }
+  })
+
+</script>
+
+<config>
+{
+  "usingComponents": {
+    "checkorder-list": "../components/checkorderlist",
+    "searchbar": "../components/searchbar"
+  },
+  "enablePullDownRefresh": true
+}
+</config>

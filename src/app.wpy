@@ -66,7 +66,7 @@ wepy.app({
       'pages/intro',
       'pages/login',
       'pages/all',
-
+      'pages/waitfortakeorderlist',
       'pages/notchecklist',
       'pages/checklist',
       'pages/search',
@@ -93,6 +93,12 @@ wepy.app({
           iconPath: 'icons/3_2.png',
           selectedIconPath: 'icons/3.png',
           text: '资料库'
+        },
+        {
+          pagePath: 'pages/waitfortakeorderlist',
+          iconPath: 'icons/2_2.png',
+          selectedIconPath: 'icons/2.png',
+          text: '待接单'
         },
         {
           pagePath: 'pages/notchecklist',
