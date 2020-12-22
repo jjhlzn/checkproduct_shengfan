@@ -58,6 +58,15 @@ wepy.app({
     }
   }
 });
+
+/*
+{
+          pagePath: 'pages/all',
+          iconPath: 'icons/3_2.png',
+          selectedIconPath: 'icons/3.png',
+          text: '资料库'
+        },
+*/
 </script>
 <config>
 {
@@ -88,16 +97,11 @@ wepy.app({
       },
     tabBar: {
       list: [ 
-        {
-          pagePath: 'pages/all',
-          iconPath: 'icons/3_2.png',
-          selectedIconPath: 'icons/3.png',
-          text: '资料库'
-        },
+        
         {
           pagePath: 'pages/waitfortakeorderlist',
-          iconPath: 'icons/2_2.png',
-          selectedIconPath: 'icons/2.png',
+          iconPath: 'icons/3_2.png',
+          selectedIconPath: 'icons/3.png',
           text: '待接单'
         },
         {

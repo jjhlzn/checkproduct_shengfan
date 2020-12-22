@@ -25,7 +25,7 @@
   wepy.page({
 
       data: {
-        status: '未验货'
+        status: '待接单'
       },
 
       mixins: [CheckOrderListMixin],

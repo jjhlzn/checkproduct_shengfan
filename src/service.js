@@ -3,10 +3,10 @@ class Service {
     this.isTest = true
     this.isLocal = true
     if (this.isLocal) {
-      this.http = 'https'
+      this.http = 'http'
       this.host = 'localhost'
-      //this.port = ':2002'
-      this.port = ':5001'
+      this.port = ':2002'
+      //this.port = ':5001'
       this.prefix = ''
     } else {
       if (this.isTest) {

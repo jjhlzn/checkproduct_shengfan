@@ -103,6 +103,13 @@ checkItemCellRight2 {
                         </div>
                     </div>  
 
+                     <view wx:if="{{status == '待接单'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}}  </view>
+
+                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
+                    </view>
+
+
                     <view wx:if="{{status == '未验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
                       <view class="flex-view-item checkItemCellLeft">{{item.gcjc != null ? item.gcjc : "" }}/{{item.contractNo}}  </view>
 
