@@ -792,6 +792,29 @@
       bindSubmitTap: function (e) {
         const that = this.$wx
 
+        wx.requestSubscribeMessage({
+            tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+            success: function (res) {
+              console.log(JSON.stringify(res))
+              console.log('subscribe success')
+              wx.login({
+                success (res) {
+                  console.log(res)
+                  if (res.code) {
+                    //发起网络请求
+                    console.log('login success')
+                  } else {
+                    console.log('登录失败！' + res.errMsg)
+                  }
+                }
+              })
+            },
+            fail: function (res) {
+              console.log('subscribe fail')
+              console.log(JSON.stringify(res))
+            }
+          })
+
         that.data.uploadImageError = false;
         let errorMessage = that.checkBeforeTap();
         if (errorMessage != "") {
