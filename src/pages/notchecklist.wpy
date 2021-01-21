@@ -32,7 +32,23 @@
 
       methods: {
 
+        onReady: function() {
+          
+        },
+
         onShow: function () {
+          wx.requestSubscribeMessage({
+          tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+          success: function (res) {
+            console.log(JSON.stringify(res))
+            console.log('subscribe success')
+          },
+          fail: function (res) {
+            console.log('subscribe fail')
+            console.log(JSON.stringify(res))
+          }
+        })
+
           utils.onShowHandler(this, utils.isNeedReloadNotCheckListKey, reset, loadData)
           wx.setNavigationBarTitle({
             title: '待验货列表',

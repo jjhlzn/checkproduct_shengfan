@@ -16,7 +16,7 @@
                     <view class="weui-label">关键字</view>
                 </view>
                 <view class="weui-cell__bd">
-                    <input class="weui-input" v-model="ticketNo"  placeholder=""/>
+                    <input class="weui-input" v-model="ticketNo"  placeholder=" "/>
                 </view>
             </view>
 
@@ -98,12 +98,12 @@
       statusIndex: 0,
       statuses: [
         { name: '待验货', value: '未验货' },
-        { name: '全部', value: '全部' },
+        { name: '待接单', value: '待接单' },
         { name: '已验货', value: '已验货' },
                 ],
       statusNames: [
         '待验货',
-        '全部',
+        '待接单',
         '已验货'
       ],
       checkers: [
@@ -264,7 +264,7 @@
         if (self.statusIndex == 0) {
           url = './notchecklist';
         } else if (self.statusIndex == 1) {
-          url = './all';
+          url = './waitfortakeorderlist';
         } else if (self.statusIndex == 2) {
           url = './checklist';
         } 

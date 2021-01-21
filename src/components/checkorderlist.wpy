@@ -68,6 +68,10 @@ checkItemCellRight2 {
   margin-bottom: 20px;
 }
 
+.flex-view-item {
+  font-size: 14px;
+}
+
 </style>
 
 <template>
@@ -78,74 +82,44 @@ checkItemCellRight2 {
                     <view class="flex-row myrow" >
                       <view class="flex-view-item firstColumn" > 
                           <view style="flex-direction:column;">
-                              <view class="flex-view-item ">合同号</view>
-                              <view class="flex-view-item ">发票号</view>
+                              <view class="flex-view-item ">合同号/货物规格</view>
+                            <!--  <view class="flex-view-item ">发票号</view> -->
                             </view>
                       </view>
-                      <view class="flex-view-item twoRowCell secondColumn"> 
-                          <p></p>
-                      </view>
-                      <view class="flex-view-item twoRowCell2 secondColumn checkItemCellRight"> 
+                     
+                      <view class="flex-view-item  secondColumn checkItemCellRight"> 
                           <p class="totalCountDesc">总共{{totalCount}}条验货单</p>
                       </view>
                    </view>
                 </view>
 
                 <div  @tap="tapItem(item)" v-for="(item,index) in items" v-bind:key="'item_' + index" class="weui-media-box weui-media-box_text">
-                    <div wx:if="{{status == '全部'}}" class="flex-row " style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
-                      <div class="flex-view-item checkItemCellLeft">{{item.contractNo}}  </div>
-                      <div class="flex-view-item checkItemCellRight">跟单员 <span class="peopleName">{{item.tracker}}</span></div>
-                    </div>
 
-                    <div wx:if="{{status == '全部'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                        <div class="flex-view-item checkItemCellLeft">
-                        {{item.ticketNo}}  
-                        </div>
-                    </div>  
 
                      <view wx:if="{{status == '待接单'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}}  </view>
+                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}} </view>
 
                       <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
                     </view>
 
 
-                    <view wx:if="{{status == '未验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                      <view class="flex-view-item checkItemCellLeft">{{item.gcjc != null ? item.gcjc : "" }}/{{item.contractNo}}  </view>
+                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}}  </view>
 
-                      <view class="flex-view-item checkItemCellRight">验货员 <span class="peopleName">{{item.checker}}</span></view>
+                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
                     </view>
 
-                    <view wx:if="{{status == '未验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
                       <view class="flex-view-item checkItemCellLeft">
-                      {{item.ticketNo}}  
+                       {{item.yjyhsj}} 
                       </view>
-                      <view class="flex-view-item checkItemCellRight"><span class="date">
-                      {{ item.yjyhsj == null ||
-                         item.yjyhsj == '' ? '-' : item.yjyhsj}}
-                       </span><span class="peopleName">{{item.checkedProductCount + "/" + item.productCount}}</span>   </view>
+                       <view class="flex-view-item checkItemCellRight" style="text-align: left;">
+                              {{item.ywy}}(业)
+                                 <span class="peopleName" style="text-align: right;">{{item.checker}}(验)</span>
+                       </view>
                     </view>    
 
-                    <div wx:if="{{status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
-                      <view class="flex-view-item checkItemCellLeft_hascheck"> {{item.gcjc != null ? item.gcjc : "" }}/{{item.contractNo}}  
-
-                      </view>
-
-                        <view class="flex-view-item checkItemCellCenter_hascheck">合格: {{item.qualifiedCount}} 
-                        </view>
-
-                        <view class="flex-view-item checkItemCellRight_hascheck">未验: {{item.notCheckCount}} 
-
-                        </view>
-                    </div>
-                    <div wx:if="{{status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; justify-content: space-between;">
-                      <view class="flex-view-item checkItemCellLeft_hascheck">{{item.ticketNo}} | {{utils.getCheckTime(item.checkTime)}}  </view>
-                    
-
-                      <view class="flex-view-item checkItemCellCenter_hascheck">不合格: {{item.notQualifiedCount}} </view>
-
-                      <view class="flex-view-item checkItemCellRight_hascheck">其他: {{item.fangkongCount+item.reworkCount+item.guarateeCount}} </view>
-                    </div>  
+                   
                 </div>
                 
 
@@ -192,13 +166,14 @@ checkItemCellRight2 {
             url: './productlist?id=' + item.ticketNo + '&contractNo=' + item.contractNo + '&checkResult='
             + item.checkResult + '&checkMemo=' + item.checkMemo + '&announcements=' + item.announcements,
           })
-        } else if (status === '未验货') {
+        } else if (status === '未验货' || status === '已验货') {
           wx.navigateTo({
-            url: './contractsofitem?id=' + item.ticketNo+'&contractNo=' + item.contractNo,
+            url: './checkproduct?ticketNo=' + item.ticketNo+'&contractNo=' + item.contractNo + '&spid=' + item.spid + '&productNo='
+             + item.productNo,
           }) 
-        } else if (status === '已验货') {
+        }  else if (status === '待接单') {
           wx.navigateTo({
-              url: './contractsofitem2?id=' + item.ticketNo+'&contractNo=' + item.contractNo,
+              url: './takeorder?ticketNo=' + item.ticketNo+'&spid=' + item.spid,
             }) 
         }
         

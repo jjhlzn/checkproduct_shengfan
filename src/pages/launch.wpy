@@ -23,7 +23,9 @@ wepy.page({
       if (loginUser) {
         wx.reLaunch({
           url: './notchecklist',
-        });
+        })
+
+        
       } else {
         wx.redirectTo({
           url: './intro',

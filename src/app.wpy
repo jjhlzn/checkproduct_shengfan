@@ -75,6 +75,7 @@ wepy.app({
       'pages/intro',
       'pages/login',
       'pages/all',
+      'pages/takeorder',
       'pages/waitfortakeorderlist',
       'pages/notchecklist',
       'pages/checklist',

@@ -1,0 +1,139 @@
+<style>
+  .topview {
+    margin-top: 20px;
+  }
+</style>
+
+<template>
+  <view class="page" xmlns:wx="http://www.w3.org/1999/xhtml">
+    <view class="page__bd">
+
+        <view class="weui-cells weui-cells_after-title topview">
+
+          <view class="weui-cell weui-cell_input">
+              <view class="weui-cell__hd">
+                  <view class="weui-label">计划验货时间</view>
+              </view>
+              <view class="weui-cell__bd">
+                  <picker mode="date" v-model="startDate" >
+                      <view class="weui-input" style="text-align: right">{{startDate}}</view>
+                  </picker>
+              </view>
+          </view>
+
+        </view>
+
+        <view class="weui-btn-area">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"   @tap="bindSubmitTap">接单</button>
+        </view>
+    </view>
+
+
+</view>
+
+</template>
+
+<script>
+
+  import wepy from '@wepy/core'
+  import { checkPermission } from '../model/user.js';
+  let moment = require('moment');
+  let utils = require('../utils').utils;
+  let service = require('../service').Service;
+
+  wepy.page({
+    data: {
+
+      startDate: '',
+      ticketNo: '',
+      spid: ''
+    },
+
+    methods: {
+      /**
+       * 生命周期函数--监听页面加载
+       */
+      onLoad: function (options) {
+        console.log("search.js options:" + options);
+        
+        this.setData({
+          startDate: moment().format('YYYY-MM-DD'),
+          ticketNo: options.ticketNo,
+          spid: options.spid
+        })
+      },
+
+      /**
+       * 生命周期函数--监听页面初次渲染完成
+       */
+      onReady: function () {
+        checkPermission();
+      },
+
+      /**
+       * 生命周期函数--监听页面显示
+       */
+      onShow: function () {
+        wx.setNavigationBarTitle({
+          title: '接单',
+        })
+      },
+
+      bindSubmitTap: function() {
+        const self = this.$wx
+        let userId = utils.getMyUserName()
+        wx.showLoading({
+            title: '',
+        })
+        wx.request({
+            url: service.takeOrderUrl(),
+            method: "POST",
+            data: {
+              ticketNo: self.data.ticketNo,
+              spid: self.data.spid,
+              username: userId,
+              date: self.data.startDate
+            },
+            header: {
+              'content-type': 'application/json'
+            },
+            success: function (res) {
+              console.log(res);
+              if (res.data.status != 0) {
+                wx.showToast({
+                  title: res.data.errorMessage,
+                  icon: 'none'
+                })
+                return;
+              }
+              wx.showToast({
+                title: '接单成功',
+              })
+
+
+              wx.setStorageSync(utils.isNeedReloadWaitfortakeorderListKey, true)
+              wx.setStorageSync(utils.isNeedReloadNotCheckListKey, true)
+              
+              wx.navigateBack({
+              })
+            },
+            fail: function (err) {
+              console.error(err)
+              wx.showToast({
+                title: '接单失败',
+                icon: 'error'
+              })
+            },
+            complete: function () {
+              wx.hideLoading()
+            }
+          })
+
+      }
+    
+      
+    }
+  })
+
+
+</script>

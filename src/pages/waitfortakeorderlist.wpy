@@ -33,7 +33,7 @@
       methods: {
 
         onShow: function () {
-          utils.onShowHandler(this, utils.isNeedReloadNotCheckListKey, reset, loadData)
+          utils.onShowHandler(this, utils.isNeedReloadWaitfortakeorderListKey, reset, loadData)
           wx.setNavigationBarTitle({
             title: '待接单列表',
           })

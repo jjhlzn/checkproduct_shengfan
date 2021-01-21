@@ -1,7 +1,7 @@
 class Service {
   constructor() {
     this.isTest = true
-    this.isLocal = true
+    this.isLocal = false
     if (this.isLocal) {
       this.http = 'http'
       this.host = 'localhost'
@@ -134,6 +134,13 @@ class Service {
 
   makeProductImageUrl(item) {
     return `${this.http}://${this.host}${this.port}/${item}`
+  }
+  takeOrderUrl() {
+    return `${this.http}://${this.host}${this.port}/takeorder${this.prefix}`
+  }
+
+  uploadTmpFileUrl() {
+    return `${this.http}://${this.host}${this.port}/uploadtmpfile${this.prefix}`
   }
 }
 

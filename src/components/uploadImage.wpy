@@ -23,6 +23,17 @@
     
               </view>
         </view>
+
+        
+        <view class="weui-cell" wx:if="{{isNeedImageMemos[index]}}">
+             <view class="weui-cell__bd">
+                    <input id="{{index}}" class="weui-textarea" placeholder="输入图片备注" bindinput="bindImageMemo"
+                    v-model="imageMemos[index]"
+                    placeholder-style="color:#e2e2e2;" maxlength="-1" />
+                    
+                </view>
+        </view>
+         
     </view>
     </div>
 </template>
@@ -30,16 +41,20 @@
 <script>
   import wepy from '@wepy/core'
 
+  let service = require('../service').Service
+
   wepy.component({
     data: {
       title: "",
       files: [],
       deleteImages: [],
       addImages: [], 
+      imageMemos: [],
       index: 0,
+      localImageMap: {},
     },
 
-    props: ["title", "files", "deleteImages", "addImages", "index"],
+    props: ["title", "files", "deleteImages", "addImages", "index", "isNeedImageMemos", "imageMemos"],
 
     methods: {
 
@@ -52,11 +67,17 @@
           sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
           success: function (res) {
             // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
+            var localImages = res.tempFilePaths
             that.data.files = that.data.files.concat(res.tempFilePaths)
             that.setData({
               files: that.data.files
             });
             self.$emit('setfiles', {index:  that.data.index, files: that.data.files})
+
+            //需要把本地的图片上传到服务器，就是为了能够预览本地的图片
+            localImages.forEach( localImage => {
+              self.upload(localImage)
+            })
           }
         })
       },
@@ -67,12 +88,45 @@
           return;
         }
         //console.log(this.data.files)
+        console.log(that.data.files[index])
+
         wx.previewImage({
-          current: that.data.files[index] + "?notCompress=true", // 当前显示图片的http链接
-          urls: that.data.files.map( url => url + "?notCompress=true") // 需要预览的图片http链接列表
+          current: that.getMapUrl(that.data.files[index]) + "?notCompress=true", // 当前显示图片的http链接
+          urls: that.data.files.map( url => that.getMapUrl(url) + "?notCompress=true") // 需要预览的图片http链接列表
         })
       },
 
+      getFileName: function(url) {
+        if (url.indexOf('/') == -1) {
+          return url
+        }
+        return url.substr(url.lastIndexOf('/')+1)
+      },
+
+
+      getMapUrl: function(url) {
+        console.log(url)
+        console.log(this.data.localImageMap)
+        if (url.startsWith('http://tmp/')) {
+          var fileName = this.getFileName(url)
+          console.log(fileName)
+          var resultUrl = this.data.localImageMap[fileName]
+          
+          console.log(resultUrl)
+          return  service.getCheckImageUrl(resultUrl)
+        }
+
+        if (url.startsWith('http' || url.startsWith('https')  )) {
+          return url
+        }
+
+        var fileName = this.getFileName(url)
+        console.log(fileName)
+        var resultUrl = this.data.localImageMap[fileName]
+        
+        console.log(resultUrl)
+        return  service.getCheckImageUrl(resultUrl)
+      },
 
       touchend: function (e) {
         const that = this.$wx
@@ -83,6 +137,26 @@
             })
           }, 100)
         }
+      },
+
+      
+      bindImageMemo: function(e) {
+
+        var self = this.$wx
+        var that = self
+       
+        var index = parseInt(e.$wx.target.id)
+        var value = e.$wx.detail.value
+        console.log(self.data.imageMemos)
+        console.log("index = " + index)
+        self.data.imageMemos[index] = value
+      
+        that.setData({
+          imageMemos: self.data.imageMemos
+        })
+        console.log(self.data.imageMemos)
+        this.$emit('setimagememos', {index: index, imageMemos: self.data.imageMemos})
+        
       },
 
       getImageUrl: function(page, index) {
@@ -124,6 +198,43 @@
             } else if (res.cancel) {
               console.log('用户点击取消')
             }
+          }
+        })
+      },
+
+      upload: function(localImage) {
+        var self = this.$wx
+        console.log("self: " );
+        console.log(self)
+        var filePath = localImage
+       
+        wx.uploadFile({
+          url: service.uploadTmpFileUrl(),
+          filePath: filePath,
+          name: filePath,
+          success: function (res) {
+            console.log(res)
+            
+            let json = null
+            try {
+              json = JSON.parse(res.data)
+            } catch (ex) {
+              console.log('exception: ' + ex)
+              return
+            }
+            console.log(json)
+            if (json.status !== 0) {
+              return
+            } 
+
+            self.data.localImageMap[json.orginNames[0]] = json.fileNames[0]
+            console.log( self.data.localImageMap[json.orginNames[0]] )
+            console.log(self.data.localImageMap)
+
+          },
+          fail: function (err) {
+            console.log(err)
+
           }
         })
       },

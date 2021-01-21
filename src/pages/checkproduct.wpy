@@ -29,6 +29,11 @@
     width: 34px; float: left; text-align:center;
   }
 
+  .disabled {
+    background-color:#ececec;
+  }
+
+
 </style>
 
 <template>
@@ -40,7 +45,7 @@
 
         <view class="weui-cells__title"> 验货属性 </view>
         <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell ">
+            <view class="weui-cell disabled" >
                 <view class="weui-cell__bd">
                   <view class="weui-label ">注意事项</view>
                 </view>
@@ -97,7 +102,7 @@
                 </view>
             </view>
 
-            <view class="weui-cell">
+            <view class="weui-cell disabled">
                 <view class="weui-cell__bd">验货时间</view>
                 <view class="weui-cell__ft">
                   {{product.checkTime ?
@@ -111,7 +116,7 @@
         <view class="weui-cells__title">其他信息</view>
         <view class="weui-cells weui-cells_after-title">
 
-            <view class="weui-cell ">
+            <view class="weui-cell disabled">
                 <view class="weui-cell__bd">
                   <view class="weui-label">包装</view>
                 </view>
@@ -120,7 +125,7 @@
                 </view>
             </view>
 
-            <view class="weui-cell ">
+            <view class="weui-cell disabled">
                 <view class="weui-cell__bd">
                   <view class="weui-label ">商品描述</view>
                 </view>
@@ -134,9 +139,12 @@
       
 
         <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
+         v-bind:imageMemos.sync="imageMemos"
         v-bind:index="index"
         v-on:setfiles="setfiles"
+         v-on:setimagememos="setimagememos"
          v-on:adddeletefile="adddeletefile"
+          v-bind:isNeedImageMemos="isNeedImageMemos"
          v-bind:deleteImages="deleteImages" v-bind:addImages="addImages"
          v-bind:title="titles[index]" v-bind:key="'uploadImage_' + index" ></uploadImage>
 
@@ -211,6 +219,20 @@
 
         </view>
 
+        <view class="weui-cells__title">验货状态</view>
+        <view class="weui-cells weui-cells_after-title">
+            <radio-group bindchange="statusRadioChange">
+                <label class="weui-cell weui-check__label" wx:for="{{statusRadioItems}}" wx:key="value">
+                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                    <view class="weui-cell__bd">{{item.name}}</view>
+                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                    </view>
+                </label>
+            </radio-group>
+        </view>
+
         <view class="weui-btn-area" >
             <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
         </view>
@@ -262,6 +284,10 @@
         { name: '返工', value: '返工' },
         { name: '放空', value: '放空' }
       ],
+      statusRadioItems: [
+        { name: '未完成', value: '未完成', checked: true  },
+        { name: '完成', value: '完成' },
+      ],
       ticketNo: "",
       contractNo: "",
       productNo: "",
@@ -274,6 +300,8 @@
       titles: ['抽检箱号图片：', '外箱及开箱中包图片：', '辅料及单包包装图片：', '条码扫描结果图片：', '产品及颜色花型图片：',
                '产品克重图片：', '尺寸工艺图片：', '问题图片：', '返工通知单及保函文件图片：', '验货报告图片：',
                '重验图片：'],
+      isNeedImageMemos: [false, false, false, false, false, false, false, true, false, false, false],
+      imageMemos: ['','','','','','','','','','',''],
       deleteImages: [],
       addImages: [],   //[{fileName: '', orginName: '', hasAddToDB: true}]
       uploadImageError: false,
@@ -281,6 +309,7 @@
       gpsAddress: '',
       //addrIndex: -1,
       //addresses: [""]
+      isCheckStatusChange: false,
       
     },
 
@@ -300,6 +329,15 @@
         const that = this.$wx
         that.data.files[index] = tmpFiles
         console.log(that.data.files)
+      },
+
+      setimagememos: function(obj) {
+        console.log("setImageMemo called")
+        const that = this.$wx
+        console.log(obj)
+        that.data.imageMemos[obj.index] = obj.imageMemos[obj.index]
+        //console.log(that.data.imageMemos)
+        //that.data.imageMemos = obj.imageMemos
       },
 
       adddeletefile: function(obj) {
@@ -333,6 +371,8 @@
       reload: function() {
         this.loadProduct()
       },
+
+      
 
       splitFiles: function(files) {
         console.log(files)
@@ -420,7 +460,7 @@
             }
             
 
-            let found = false;
+            let found = false
             self.data.radioItems.forEach(item => {
               if (item.value == res.data.product.checkResult) {
                 item.checked = true;
@@ -435,6 +475,19 @@
               self.data.radioItems[0].checked = true;
             }
 
+            let foundStatus = false
+            self.data.statusRadioItems.forEach(item => {
+              if (item.value == res.data.product.checkStatus) {
+                item.checked = true;
+                foundStatus = true;
+              } else {
+                delete item.checked;
+              }
+            })
+            if (!foundStatus) {
+              self.data.statusRadioItems[0].checked = true
+            }
+
             let sizeObj = utils.extractSize(res.data.product.boxSize);
             res.data.product.sizeObj = sizeObj;
 
@@ -446,6 +499,8 @@
             }
             //console.log(urls)
 
+            self.data.imageMemos[7] = res.data.product.problemImageMemo
+
             res.data.product.zlkUrls = res.data.product.zlkUrls.map(file => service.makeImageUrl(file));
             res.data.product.productUrls = res.data.product.productUrls.map(file => service.makeProductImageUrl(file));
             console.log(res.data.product.productUrls)
@@ -453,6 +508,8 @@
               product: res.data.product,
               files: urls,
               radioItems: self.data.radioItems,
+              statusRadioItems: self.data.statusRadioItems,
+              imageMemos: self.data.imageMemos,
               canEdit: res.data.product.checkerId == self.data.loginUser.username || self.data.loginUser.role == 'checker_manager'
             })
 
@@ -519,6 +576,21 @@
         });
       },
 
+      statusRadioChange: function(e) {
+        const that = this.$wx
+        console.log('radio发生change事件，携带value值为：', e.$wx.detail.value);
+        that.data.product.checkStatus = e.$wx.detail.value;
+        var radioItems = that.data.statusRadioItems;
+        for (var i = 0, len = radioItems.length; i < len; ++i) {
+          radioItems[i].checked = radioItems[i].value == e.$wx.detail.value;
+        }
+
+        that.setData({
+          statusRadioItems: radioItems,
+          isCheckStatusChange: true,
+        });
+      },
+
       previewZlkImage: function (e) {
         let id = e.currentTarget.id;
         let index = parseInt(id.replace('image_', ''));
@@ -571,12 +643,12 @@
 
                   //把审核的结果传递回前一个页面
                   let pages = getCurrentPages();
-                  let curPage = pages[pages.length - 2];
-                  curPage.updateCheckResult(self.data.productNo, self.data.product.spid, "");
+                  //let curPage = pages[pages.length - 2];
+                  //curPage.updateCheckResult(self.data.productNo, self.data.product.spid, "");
 
-                  let prevPage = pages[0];
+                  //let prevPage = pages[0];
                 
-                  reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
+                  //reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
 
                   wx.navigateBack({
                     isCheckSuccess: true
@@ -634,6 +706,7 @@
         let addImageUrls = self.data.addImages.filter(item => { return !item.hasAddToDB }).map(item => item.fileName);
         console.log('addImages:' + addImageUrls);
         console.log('deleteImages: ' + self.data.deleteImages);
+        console.log('imageMemo: ' + self.data.imageMemos[7])
 
         let queryParams = {
           ticketNo: self.data.ticketNo,
@@ -642,6 +715,7 @@
           spid: self.data.spid,
 
           checkResult: self.data.product.checkResult,
+          checkStatus: self.data.product.checkStatus,
 
           totalCount: parseInt(self.data.product.totalCount),
           pickCount: parseInt(self.data.product.pickCount),
@@ -653,6 +727,8 @@
           checkMemo: self.data.product.checkMemo,
           checkAddress: self.data.gpsAddress,
           username: utils.getMyUserName(),
+
+          problemImageMemo: self.data.imageMemos[7],
 
           addImages: utils.combineImageUrls(addImageUrls),
           deleteImages: utils.combineImageUrls(self.data.deleteImages)
@@ -683,13 +759,17 @@
               self.data.deleteImages = [];
 
               //把审核的结果传递回前一个页面
-              let pages = getCurrentPages();
-              let curPage = pages[pages.length - 2];
-              curPage.updateCheckResult(self.data.productNo, self.data.product.spid, self.data.product.checkResult);
+              //let pages = getCurrentPages();
+              //let curPage = pages[pages.length - 2];
+              //curPage.updateCheckResult(self.data.productNo, self.data.product.spid, self.data.product.checkResult);
 
-              let prevPage = pages[0];
-              reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
-
+              //let prevPage = pages[0];
+              //reloadOrder(prevPage, self.data.ticketNo, self.data.contractNo)
+              if (self.data.isCheckStatusChange) {
+                self.data.isCheckStatusChange = false
+                wx.setStorageSync(utils.isNeedReloadCheckedListKey, true)
+                wx.setStorageSync(utils.isNeedReloadNotCheckListKey, true)
+              }
               
               wx.navigateBack({
                 isCheckSuccess: true
