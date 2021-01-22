@@ -1,7 +1,7 @@
 class Service {
   constructor() {
     this.isTest = true
-    this.isLocal = false
+    this.isLocal = true
     if (this.isLocal) {
       this.http = 'http'
       this.host = 'localhost'
@@ -141,6 +141,10 @@ class Service {
 
   uploadTmpFileUrl() {
     return `${this.http}://${this.host}${this.port}/uploadtmpfile${this.prefix}`
+  }
+
+  getSubscribeMessageUrl() {
+    return `${this.http}://${this.host}${this.port}/subscribemessage${this.prefix}`
   }
 }
 

@@ -249,6 +249,10 @@
         <view class="weui-btn-area">
             <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
         </view>  
+
+        <view class="weui-btn-area">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubscribe">订阅消息</button>
+        </view> 
     </view>
 </view>
 </template>
@@ -792,29 +796,6 @@
       bindSubmitTap: function (e) {
         const that = this.$wx
 
-        wx.requestSubscribeMessage({
-            tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
-            success: function (res) {
-              console.log(JSON.stringify(res))
-              console.log('subscribe success')
-              wx.login({
-                success (res) {
-                  console.log(res)
-                  if (res.code) {
-                    //发起网络请求
-                    console.log('login success')
-                  } else {
-                    console.log('登录失败！' + res.errMsg)
-                  }
-                }
-              })
-            },
-            fail: function (res) {
-              console.log('subscribe fail')
-              console.log(JSON.stringify(res))
-            }
-          })
-
         that.data.uploadImageError = false;
         let errorMessage = that.checkBeforeTap();
         if (errorMessage != "") {
@@ -863,6 +844,44 @@
         const that = this.$wx
         wx.navigateTo({
           url: './webview?ticketNo=' + that.data.ticketNo + '&spid=' + that.data.spid + '&productNo=' + that.data.productNo + '&contractNo=' + that.data.contractNo
+        })
+      },
+
+      bindSubscribe: function(e) {
+        wx.requestSubscribeMessage({
+          tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+          success: function (res) {
+            console.log(JSON.stringify(res))
+            console.log('subscribe success')
+            wx.login({
+              success (res) {
+                console.log(res)
+                if (res.code) {
+                  //发起网络请求
+                  console.log('login success')
+                  let user = wx.getStorageSync('loginUser')
+                  console.log(user)
+                  wx.request({
+                    url: service.getSubscribeMessageUrl(),
+                    method: 'POST',
+                    data: {
+                      username: user.username,
+                      code: res.code,
+                    },
+                    success: function(res) {
+                      console.log(res)
+                    }
+                  })
+                } else {
+                  console.log('登录失败！' + res.errMsg)
+                }
+              }
+            })
+          },
+          fail: function (res) {
+            console.log('subscribe fail')
+            console.log(JSON.stringify(res))
+          }
         })
       } 
     }
