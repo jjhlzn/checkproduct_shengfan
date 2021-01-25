@@ -42,6 +42,7 @@
   import wepy from '@wepy/core'
 
   let service = require('../service').Service
+  const utils = require('../utils').utils;
 
   wepy.component({
     data: {
@@ -61,6 +62,8 @@
       chooseImage: function (e) {
         var self = this
         const that = this.$wx
+
+        utils.addSubscribeMessage()
       
         wx.chooseImage({
           sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
@@ -83,6 +86,7 @@
       },
 
       previewImage: function (index) {
+        utils.addSubscribeMessage()
         const that = this.$wx
         if (that.data.lock) {
           return;
@@ -141,7 +145,7 @@
 
       
       bindImageMemo: function(e) {
-
+        utils.addSubscribeMessage()
         var self = this.$wx
         var that = self
        
@@ -175,6 +179,7 @@
       },
 
       bindLongImageTap: function (index) {
+        utils.addSubscribeMessage()
         console.log('long tap handler')
         const vm = this
         let self = this.$wx;

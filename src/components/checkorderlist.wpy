@@ -1,3 +1,115 @@
+<script>
+  import wepy from '@wepy/core'
+    const utils = require('../utils').utils;
+
+  wepy.component({
+    data: {
+      loading: false,
+      totalCount: 0,
+      isLoadAll: false,
+      items: [],
+      status: '全部'
+    },
+    props: ['items', 'loading', 'totalCount', 'isLoadAll', 'status'],
+    methods: {
+
+      tapItem(item) {
+        utils.addSubscribeMessage()
+        console.log("item:", item);
+        const status = this.$wx.data.status
+        if (status === '全部') {
+          wx.navigateTo({
+            url: './productlist?id=' + item.ticketNo + '&contractNo=' + item.contractNo + '&checkResult='
+            + item.checkResult + '&checkMemo=' + item.checkMemo + '&announcements=' + item.announcements,
+          })
+        } else if (status === '未验货' || status === '已验货') {
+          wx.navigateTo({
+            url: './checkproduct?ticketNo=' + item.ticketNo+'&contractNo=' + item.contractNo + '&spid=' + item.spid + '&productNo='
+             + item.productNo,
+          }) 
+        }  else if (status === '待接单') {
+          wx.navigateTo({
+              url: './takeorder?ticketNo=' + item.ticketNo+'&spid=' + item.spid,
+            }) 
+        }
+      }
+    }
+  })
+
+</script>
+
+<template>
+  <view class="weui-panel weui-panel_access">
+            <view class="weui-panel__bd">
+ 
+                 <view class=" weui-media-box weui-media-box_text">
+                    <view class="flex-row myrow" >
+                      <view class="flex-view-item firstColumn" > 
+                          <view style="flex-direction:column;">
+                              <view class="flex-view-item ">合同号/货物规格</view>
+                            <!--  <view class="flex-view-item ">发票号</view> -->
+                            </view>
+                      </view>
+                     
+                      <view class="flex-view-item  secondColumn checkItemCellRight"> 
+                          <p class="totalCountDesc">总共{{totalCount}}条验货单</p>
+                      </view>
+                   </view>
+                </view>
+
+                <div  @tap="tapItem(item)" v-for="(item,index) in items" v-bind:key="'item_' + index" class="weui-media-box weui-media-box_text">
+
+
+                     <view wx:if="{{status == '待接单'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}} </view>
+
+                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
+                    </view>
+
+
+                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}}  </view>
+
+                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
+                    </view>
+
+                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
+                      <view class="flex-view-item checkItemCellLeft">
+                       {{item.yjyhsj}} 
+                      </view>
+                       <view class="flex-view-item checkItemCellRight" style="text-align: left;">
+                              {{item.ywy}}(业)
+                                 <span class="peopleName" style="text-align: right;">{{item.checker}}(验)</span>
+                       </view>
+                    </view>    
+
+                   
+                </div>
+                
+
+
+                <view> 
+                  <view class="weui-loadmore" wx:if="{{loading}}">
+                      <view class="weui-loading"></view>
+                      <view class="weui-loadmore__tips">正在加载</view>
+                  </view>
+                  <view class="weui-loadmore weui-loadmore_line loadAllCell" wx:if="{{!loading && isLoadAll && totalCount != 0}}">
+                    <view class="weui-loadmore__tips weui-loadmore__tips_in-line">已加载完毕</view>
+                    
+                  </view>
+                </view>
+            </view>
+
+             <view class="weui-panel__bd" wx:if="{{!loading && isLoadAll && (totalCount === 0)}}">
+                <view class="weui-loadmore weui-loadmore_line noDataCell">
+                    <view class="weui-loadmore__tips weui-loadmore__tips_in-line">暂无数据</view>
+                </view>
+            </view>
+        </view>
+</template>
+
+
+
 <style lang="less">
   @import "../style/app.wxss";
   .checkItemCellLeft {
@@ -73,114 +185,3 @@ checkItemCellRight2 {
 }
 
 </style>
-
-<template>
-  <view class="weui-panel weui-panel_access">
-            <view class="weui-panel__bd">
- 
-                 <view class=" weui-media-box weui-media-box_text">
-                    <view class="flex-row myrow" >
-                      <view class="flex-view-item firstColumn" > 
-                          <view style="flex-direction:column;">
-                              <view class="flex-view-item ">合同号/货物规格</view>
-                            <!--  <view class="flex-view-item ">发票号</view> -->
-                            </view>
-                      </view>
-                     
-                      <view class="flex-view-item  secondColumn checkItemCellRight"> 
-                          <p class="totalCountDesc">总共{{totalCount}}条验货单</p>
-                      </view>
-                   </view>
-                </view>
-
-                <div  @tap="tapItem(item)" v-for="(item,index) in items" v-bind:key="'item_' + index" class="weui-media-box weui-media-box_text">
-
-
-                     <view wx:if="{{status == '待接单'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}} </view>
-
-                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
-                    </view>
-
-
-                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                      <view class="flex-view-item checkItemCellLeft">{{item.contractNo}} | {{item.factory}}  </view>
-
-                      <view class="flex-view-item checkItemCellRight"> {{item.productName}} - {{item.spgg}} </view>
-                    </view>
-
-                    <view wx:if="{{status == '未验货' || status == '已验货'}}" class="flex-row" style="display: flex;flex-direction: row; align-items: left; ">
-                      <view class="flex-view-item checkItemCellLeft">
-                       {{item.yjyhsj}} 
-                      </view>
-                       <view class="flex-view-item checkItemCellRight" style="text-align: left;">
-                              {{item.ywy}}(业)
-                                 <span class="peopleName" style="text-align: right;">{{item.checker}}(验)</span>
-                       </view>
-                    </view>    
-
-                   
-                </div>
-                
-
-
-                <view> 
-                  <view class="weui-loadmore" wx:if="{{loading}}">
-                      <view class="weui-loading"></view>
-                      <view class="weui-loadmore__tips">正在加载</view>
-                  </view>
-                  <view class="weui-loadmore weui-loadmore_line loadAllCell" wx:if="{{!loading && isLoadAll && totalCount != 0}}">
-                    <view class="weui-loadmore__tips weui-loadmore__tips_in-line">已加载完毕</view>
-                    
-                  </view>
-                </view>
-            </view>
-
-             <view class="weui-panel__bd" wx:if="{{!loading && isLoadAll && (totalCount === 0)}}">
-                <view class="weui-loadmore weui-loadmore_line noDataCell">
-                    <view class="weui-loadmore__tips weui-loadmore__tips_in-line">暂无数据</view>
-                </view>
-            </view>
-        </view>
-</template>
-
-<script>
-  import wepy from '@wepy/core'
-
-  wepy.component({
-    data: {
-      loading: false,
-      totalCount: 0,
-      isLoadAll: false,
-      items: [],
-      status: '全部'
-    },
-    props: ['items', 'loading', 'totalCount', 'isLoadAll', 'status'],
-    methods: {
-
-      tapItem(item) {
-        console.log("item:", item);
-        const status = this.$wx.data.status
-        if (status === '全部') {
-          wx.navigateTo({
-            url: './productlist?id=' + item.ticketNo + '&contractNo=' + item.contractNo + '&checkResult='
-            + item.checkResult + '&checkMemo=' + item.checkMemo + '&announcements=' + item.announcements,
-          })
-        } else if (status === '未验货' || status === '已验货') {
-          wx.navigateTo({
-            url: './checkproduct?ticketNo=' + item.ticketNo+'&contractNo=' + item.contractNo + '&spid=' + item.spid + '&productNo='
-             + item.productNo,
-          }) 
-        }  else if (status === '待接单') {
-          wx.navigateTo({
-              url: './takeorder?ticketNo=' + item.ticketNo+'&spid=' + item.spid,
-            }) 
-        }
-        
-        
-      }
-      
-    }
-  })
-
-</script>

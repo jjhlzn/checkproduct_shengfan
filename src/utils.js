@@ -1,4 +1,5 @@
-var moment = require('moment')
+const moment = require('moment')
+const service = require('./service').Service
 
 let utils = {
   isFloat: isFloat,
@@ -15,7 +16,8 @@ let utils = {
   isCheckerManager: isCheckerManager,
   sortImages: sortImages,
   getStartDate: getStartDate,
-  getEndDate: getEndDate
+  getEndDate: getEndDate,
+  addSubscribeMessage: addSubscribeMessage
 
 }
 
@@ -138,6 +140,25 @@ function getStartDate() {
 
 function getEndDate() {
   return moment().add(1, 'day').format('YYYY-MM-DD')
+}
+
+function addSubscribeMessage() {
+  //判断是否是本地
+  //console.log(service.host)
+  if (service.host === 'localhost') {
+    return
+  }
+  wx.requestSubscribeMessage({
+    tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+    success: function (res) {
+      console.log(JSON.stringify(res))
+      console.log('subscribe success')
+    },
+    fail: function (res) {
+      console.log('subscribe fail')
+      console.log(JSON.stringify(res))
+    }
+  })
 }
 
 module.exports = {

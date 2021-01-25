@@ -1,261 +1,4 @@
-<style>
-  .weui-cell__bd{
-    width: 60px;
-  }
-  .weui-cell__ft input {
-    width: 180px;
-  }
 
-  .prop_description {
-    text-align: justify;
-    margin-left: 30px;
-    font-size: 15px;
-  }
-
-  .addressPicker{
-    margin-left: 5px;
-    padding-left: 5px;
-    overflow:hidden;
-  }
-
-  input.inputBox {
-    width: 40px; 
-    border: solid 1px lightgray; 
-    float: left;
-    text-align:center
-  }
-
-  .x {
-    width: 34px; float: left; text-align:center;
-  }
-
-  .disabled {
-    background-color:#ececec;
-  }
-
-
-</style>
-
-<template>
-
-
-  <view class="page" xmlns:wx="http://www.w3.org/1999/xhtml">
-   
-    <view class="page__bd">
-
-        <view class="weui-cells__title"> 验货属性 </view>
-        <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell disabled" >
-                <view class="weui-cell__bd">
-                  <view class="weui-label ">注意事项</view>
-                </view>
-                <view class="weui-cell__ft prop_description">
-                 {{product.announcements == null || product.announcements == "" ? "无" : product.announcements}}
-                </view>
-            </view>
-            
-            <view class="weui-cell">
-                <view class="weui-cell__bd">实际验货箱数</view>
-                <view class="weui-cell__ft">
-                   <input type="number" placeholder="" v-model="product.totalCount"/>
-                </view>
-            </view>
-
-            <view class="weui-cell">
-                <view class="weui-cell__bd">抽箱数</view>
-                <view class="weui-cell__ft">
-                  <input type="number" placeholder="" v-model="product.pickCount" />
-                </view>
-            </view>
-
-            <view class="weui-cell">
-                <view class="weui-cell__bd">实际验货数量</view>
-                <view class="weui-cell__ft">
-                  <input type="number" placeholder="" v-model="product.sjCount" />
-                </view>
-            </view>
-
-            <view class="weui-cell">
-                <view class="weui-cell__bd">外箱尺寸</view>
-                <view class="weui-cell__ft">
-                  <input class="inputBox" type="digit" placeholder=""
-                   value="{{product.sizeObj.long != 0 ? product.sizeObj.long : '0'}}" bindinput="setLong" focus="{{focusList[0]}}"/> 
-                    <p class="x"> x </p>
-                   <input id="widthInput" class="inputBox" type="digit" placeholder="" 
-                   value="{{product.sizeObj.width != 0 ? product.sizeObj.width : '0'}}" bindinput="setWidth" focus="{{focusList[1]}}"/> 
-                    <p class="x"> x </p>
-                   <input class="inputBox" type="digit" placeholder="" 
-                   value="{{product.sizeObj.height != 0 ? product.sizeObj.height : '0'}}" bindinput="setHeight" focus="{{focusList[2]}}"/> 
-                    <p style="width: 30px; float: left; text-align:right;"> cm </p>
-                </view>
-            </view>
-            <view class="weui-cell">
-                <view class="weui-cell__bd">单件毛重</view>
-                <view class="weui-cell__ft">
-                  <input  placeholder="" v-model="product.grossWeight"/>
-                </view>
-            </view>
-            <view class="weui-cell">
-                <view class="weui-cell__bd">单件净重</view>
-                <view class="weui-cell__ft">
-                  <input  placeholder="" v-model="product.netWeight" />
-                </view>
-            </view>
-
-            <view class="weui-cell disabled">
-                <view class="weui-cell__bd">验货时间</view>
-                <view class="weui-cell__ft">
-                  {{product.checkTime ?
-                   (product.checkTime !=  "1900-01-01 00:00:00" ? product.checkTime : ""): ""}}
-                </view>
-            </view>
-        </view>
-
-        
-
-        <view class="weui-cells__title">其他信息</view>
-        <view class="weui-cells weui-cells_after-title">
-
-            <view class="weui-cell disabled">
-                <view class="weui-cell__bd">
-                  <view class="weui-label">包装</view>
-                </view>
-                <view class="weui-cell__ft">
-                  {{product.package}}
-                </view>
-            </view>
-
-            <view class="weui-cell disabled">
-                <view class="weui-cell__bd">
-                  <view class="weui-label ">商品描述</view>
-                </view>
-                <view class="weui-cell__ft prop_description">
-                 {{product.description}}
-                </view>
-            </view>
-            
-        </view>
-
-      
-
-        <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
-         v-bind:imageMemos.sync="imageMemos"
-        v-bind:index="index"
-        v-on:setfiles="setfiles"
-         v-on:setimagememos="setimagememos"
-         v-on:adddeletefile="adddeletefile"
-          v-bind:isNeedImageMemos="isNeedImageMemos"
-         v-bind:deleteImages="deleteImages" v-bind:addImages="addImages"
-         v-bind:title="titles[index]" v-bind:key="'uploadImage_' + index" ></uploadImage>
-
-        <view class="weui-cells__title">商品图片</view>
-          <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-uploader__bd">
-                            <view class="weui-uploader__files"  >
-                                 <block wx:for="{{product.productUrls}}" wx:key="*this">
-                                    <view class="weui-uploader__file"  bindtap="previewProductImage" id="image_{{index}}">
-                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
-                                    </view>
-                                </block>
-                            </view>
-                        </view>
-            </view>
-        </view>
-
-        <view class="weui-cells__title">资料库图片</view>
-        <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-uploader__bd">
-                            <view class="weui-uploader__files"  >
-                                 <block wx:for="{{product.zlkUrls}}" wx:key="*this">
-                                    <view class="weui-uploader__file"  bindtap="previewZlkImage" >
-                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
-                                    </view>
-                                </block>
-                            </view>
-                            
-                        </view>
-            </view>
-        </view>
-
-        <view class="weui-cells__title">验货总评</view>
-        <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-cell__bd">
-                    <textarea class="weui-textarea" placeholder="请输入验货总评" 
-                    v-model="product.checkMemo" style="height: 14em" maxlength="-1" />
-                    <!--<view class="weui-textarea-counter">0/200</view> -->
-                </view>
-            </view>
-        </view>
-
-         <view class="weui-cells__title">验货地址</view>
-        <view class="weui-cells weui-cells_after-title">
-          <view class="weui-cell">
-                <view class="weui-cell__bd">
-                    <textarea class="weui-textarea" placeholder=""  v-model="gpsAddress" style="height: 3.1em" />
-                    <!--<view class="weui-textarea-counter">0/200</view> -->
-                </view>
-            </view>
-        </view>
-
-        
-        <view class="weui-cells__title">验货结果</view>
-        <view class="weui-cells weui-cells_after-title">
-
-
-            <radio-group bindchange="radioChange">
-                <label class="weui-cell weui-check__label" wx:for="{{radioItems}}" wx:key="value">
-                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
-
-                    <view class="weui-cell__bd">{{item.name}}</view>
-                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
-                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
-                    </view> 
-                </label>
-            </radio-group>
-
-
-        </view>
-
-        <view class="weui-cells__title">验货状态</view>
-        <view class="weui-cells weui-cells_after-title">
-            <radio-group bindchange="statusRadioChange">
-                <label class="weui-cell weui-check__label" wx:for="{{statusRadioItems}}" wx:key="value">
-                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
-
-                    <view class="weui-cell__bd">{{item.name}}</view>
-                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
-                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
-                    </view>
-                </label>
-            </radio-group>
-        </view>
-
-        <view class="weui-btn-area" >
-            <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
-        </view>
-
-        <view class="weui-btn-area" >
-            <button class="weui-btn" style="background-color: #e64340;"  wx:if="{{canEdit}}"  type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
-        </view>
-
-        <view class="weui-btn-area">
-            <button type="default" hover-class="other-button-hover"  wx:if="{{canEdit}}"   bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
-          </view> 
-
-
-        <view class="weui-btn-area">
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
-        </view>  
-
-        <view class="weui-btn-area">
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindSubscribe">订阅消息</button>
-        </view> 
-    </view>
-</view>
-</template>
 
 <script>
   import wepy from '@wepy/core'
@@ -567,6 +310,7 @@
       },
 
       radioChange: function (e) {
+        utils.addSubscribeMessage()
         const that = this.$wx
         console.log('radio发生change事件，携带value值为：', e.$wx.detail.value);
         that.data.product.checkResult = e.$wx.detail.value;
@@ -581,6 +325,7 @@
       },
 
       statusRadioChange: function(e) {
+        utils.addSubscribeMessage()
         const that = this.$wx
         console.log('radio发生change事件，携带value值为：', e.$wx.detail.value);
         that.data.product.checkStatus = e.$wx.detail.value;
@@ -795,6 +540,7 @@
 
       bindSubmitTap: function (e) {
         const that = this.$wx
+        utils.addSubscribeMessage()
 
         that.data.uploadImageError = false;
         let errorMessage = that.checkBeforeTap();
@@ -845,48 +591,268 @@
         wx.navigateTo({
           url: './webview?ticketNo=' + that.data.ticketNo + '&spid=' + that.data.spid + '&productNo=' + that.data.productNo + '&contractNo=' + that.data.contractNo
         })
-      },
-
-      bindSubscribe: function(e) {
-        wx.requestSubscribeMessage({
-          tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
-          success: function (res) {
-            console.log(JSON.stringify(res))
-            console.log('subscribe success')
-            wx.login({
-              success (res) {
-                console.log(res)
-                if (res.code) {
-                  //发起网络请求
-                  console.log('login success')
-                  let user = wx.getStorageSync('loginUser')
-                  console.log(user)
-                  wx.request({
-                    url: service.getSubscribeMessageUrl(),
-                    method: 'POST',
-                    data: {
-                      username: user.username,
-                      code: res.code,
-                    },
-                    success: function(res) {
-                      console.log(res)
-                    }
-                  })
-                } else {
-                  console.log('登录失败！' + res.errMsg)
-                }
-              }
-            })
-          },
-          fail: function (res) {
-            console.log('subscribe fail')
-            console.log(JSON.stringify(res))
-          }
-        })
-      } 
+      }
     }
   })
 </script>
+
+
+
+<template>
+
+
+  <view class="page" xmlns:wx="http://www.w3.org/1999/xhtml">
+   
+    <view class="page__bd">
+
+        <view class="weui-cells__title"> 验货属性 </view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell disabled" >
+                <view class="weui-cell__bd">
+                  <view class="weui-label ">注意事项</view>
+                </view>
+                <view class="weui-cell__ft prop_description">
+                 {{product.announcements == null || product.announcements == "" ? "无" : product.announcements}}
+                </view>
+            </view>
+            
+            <view class="weui-cell">
+                <view class="weui-cell__bd">实际验货箱数</view>
+                <view class="weui-cell__ft">
+                   <input type="number" placeholder="" v-model="product.totalCount"/>
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">抽箱数</view>
+                <view class="weui-cell__ft">
+                  <input type="number" placeholder="" v-model="product.pickCount" />
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">实际验货数量</view>
+                <view class="weui-cell__ft">
+                  <input type="number" placeholder="" v-model="product.sjCount" />
+                </view>
+            </view>
+
+            <view class="weui-cell">
+                <view class="weui-cell__bd">外箱尺寸</view>
+                <view class="weui-cell__ft">
+                  <input class="inputBox" type="digit" placeholder=""
+                   value="{{product.sizeObj.long != 0 ? product.sizeObj.long : '0'}}" bindinput="setLong" focus="{{focusList[0]}}"/> 
+                    <p class="x"> x </p>
+                   <input id="widthInput" class="inputBox" type="digit" placeholder="" 
+                   value="{{product.sizeObj.width != 0 ? product.sizeObj.width : '0'}}" bindinput="setWidth" focus="{{focusList[1]}}"/> 
+                    <p class="x"> x </p>
+                   <input class="inputBox" type="digit" placeholder="" 
+                   value="{{product.sizeObj.height != 0 ? product.sizeObj.height : '0'}}" bindinput="setHeight" focus="{{focusList[2]}}"/> 
+                    <p style="width: 30px; float: left; text-align:right;"> cm </p>
+                </view>
+            </view>
+            <view class="weui-cell">
+                <view class="weui-cell__bd">单件毛重</view>
+                <view class="weui-cell__ft">
+                  <input  placeholder="" v-model="product.grossWeight"/>
+                </view>
+            </view>
+            <view class="weui-cell">
+                <view class="weui-cell__bd">单件净重</view>
+                <view class="weui-cell__ft">
+                  <input  placeholder="" v-model="product.netWeight" />
+                </view>
+            </view>
+
+            <view class="weui-cell disabled">
+                <view class="weui-cell__bd">验货时间</view>
+                <view class="weui-cell__ft">
+                  {{product.checkTime ?
+                   (product.checkTime !=  "1900-01-01 00:00:00" ? product.checkTime : ""): ""}}
+                </view>
+            </view>
+        </view>
+
+        
+
+        <view class="weui-cells__title">其他信息</view>
+        <view class="weui-cells weui-cells_after-title">
+
+            <view class="weui-cell disabled">
+                <view class="weui-cell__bd">
+                  <view class="weui-label">包装</view>
+                </view>
+                <view class="weui-cell__ft">
+                  {{product.package}}
+                </view>
+            </view>
+
+            <view class="weui-cell disabled">
+                <view class="weui-cell__bd">
+                  <view class="weui-label ">商品描述</view>
+                </view>
+                <view class="weui-cell__ft prop_description">
+                 {{product.description}}
+                </view>
+            </view>
+            
+        </view>
+
+      
+
+        <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
+         v-bind:imageMemos.sync="imageMemos"
+        v-bind:index="index"
+        v-on:setfiles="setfiles"
+         v-on:setimagememos="setimagememos"
+         v-on:adddeletefile="adddeletefile"
+          v-bind:isNeedImageMemos="isNeedImageMemos"
+         v-bind:deleteImages="deleteImages" v-bind:addImages="addImages"
+         v-bind:title="titles[index]" v-bind:key="'uploadImage_' + index" ></uploadImage>
+
+        <view class="weui-cells__title">商品图片</view>
+          <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-uploader__bd">
+                            <view class="weui-uploader__files"  >
+                                 <block wx:for="{{product.productUrls}}" wx:key="*this">
+                                    <view class="weui-uploader__file"  bindtap="previewProductImage" id="image_{{index}}">
+                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                    </view>
+                                </block>
+                            </view>
+                        </view>
+            </view>
+        </view>
+
+        <view class="weui-cells__title">资料库图片</view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-uploader__bd">
+                            <view class="weui-uploader__files"  >
+                                 <block wx:for="{{product.zlkUrls}}" wx:key="*this">
+                                    <view class="weui-uploader__file"  bindtap="previewZlkImage" >
+                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                    </view>
+                                </block>
+                            </view>
+                            
+                        </view>
+            </view>
+        </view>
+
+        <view class="weui-cells__title">验货总评</view>
+        <view class="weui-cells weui-cells_after-title">
+            <view class="weui-cell">
+                <view class="weui-cell__bd">
+                    <textarea class="weui-textarea" placeholder="请输入验货总评" 
+                    v-model="product.checkMemo" style="height: 14em" maxlength="-1" />
+                    <!--<view class="weui-textarea-counter">0/200</view> -->
+                </view>
+            </view>
+        </view>
+
+         <view class="weui-cells__title">验货地址</view>
+        <view class="weui-cells weui-cells_after-title">
+          <view class="weui-cell">
+                <view class="weui-cell__bd">
+                    <textarea class="weui-textarea" placeholder=""  v-model="gpsAddress" style="height: 3.1em" />
+                    <!--<view class="weui-textarea-counter">0/200</view> -->
+                </view>
+            </view>
+        </view>
+
+        
+        <view class="weui-cells__title">验货结果</view>
+        <view class="weui-cells weui-cells_after-title">
+
+
+            <radio-group bindchange="radioChange">
+                <label class="weui-cell weui-check__label" wx:for="{{radioItems}}" wx:key="value">
+                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                    <view class="weui-cell__bd">{{item.name}}</view>
+                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                    </view> 
+                </label>
+            </radio-group>
+
+
+        </view>
+
+        <view class="weui-cells__title">验货状态</view>
+        <view class="weui-cells weui-cells_after-title">
+            <radio-group bindchange="statusRadioChange">
+                <label class="weui-cell weui-check__label" wx:for="{{statusRadioItems}}" wx:key="value">
+                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                    <view class="weui-cell__bd">{{item.name}}</view>
+                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                    </view>
+                </label>
+            </radio-group>
+        </view>
+
+        <view class="weui-btn-area" >
+            <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+        </view>
+
+        <view class="weui-btn-area" >
+            <button class="weui-btn" style="background-color: #e64340;"  wx:if="{{canEdit}}"  type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
+        </view>
+
+        <view class="weui-btn-area">
+            <button type="default" hover-class="other-button-hover"  wx:if="{{canEdit}}"   bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
+          </view> 
+
+
+        <view class="weui-btn-area">
+            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
+        </view>  
+
+    </view>
+</view>
+</template>
+
+<style>
+  .weui-cell__bd{
+    width: 60px;
+  }
+  .weui-cell__ft input {
+    width: 180px;
+  }
+
+  .prop_description {
+    text-align: justify;
+    margin-left: 30px;
+    font-size: 15px;
+  }
+
+  .addressPicker{
+    margin-left: 5px;
+    padding-left: 5px;
+    overflow:hidden;
+  }
+
+  input.inputBox {
+    width: 40px; 
+    border: solid 1px lightgray; 
+    float: left;
+    text-align:center
+  }
+
+  .x {
+    width: 34px; float: left; text-align:center;
+  }
+
+  .disabled {
+    background-color:#ececec;
+  }
+
+
+</style>
 
 
 <config>

@@ -1,38 +1,4 @@
-<style>
 
-</style>
-
-<template>
-  <view class="page__bd">
-
-    <view class="weui-cells weui-cells_after-title">
-        <view class="weui-cell">
-            <view class="weui-cell__bd">账号</view>
-            <view class="weui-cell__ft">{{loginUser.username}}</view>
-        </view>
-
-        <view class="weui-cell">
-            <view class="weui-cell__bd">姓名</view>
-            <view class="weui-cell__ft">{{loginUser.name}}</view>
-        </view>
-
-        <view class="weui-cell">
-            <view class="weui-cell__bd">权限</view>
-            <view class="weui-cell__ft">{{loginUser.roleName}}</view>
-        </view>
-
-        <view class="weui-cell"  @tap="tapModifyPassword()">
-            <view class="weui-cell__bd">修改密码</view>
-            <view class="weui-cell__ft">></view>
-        </view>
-    </view>
-
-    <view class="weui-btn-area">
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindLogoutTap">退出</button>
-        </view>
-  
-  </view>
-</template>
 
 <script>
 
@@ -72,8 +38,63 @@
         wx.reLaunch({
           url: './login',
         })
+      },
+
+      bindSubscribeMessage: function() {
+         wx.requestSubscribeMessage({
+          tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+          success: function (res) {
+            console.log(JSON.stringify(res))
+            console.log('subscribe success')
+          },
+          fail: function (res) {
+            console.log('subscribe fail')
+            console.log(JSON.stringify(res))
+          }
+        })
       }
     }
   })
 </script>
+
+
+<template>
+  <view class="page__bd">
+
+    <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell">
+            <view class="weui-cell__bd">账号</view>
+            <view class="weui-cell__ft">{{loginUser.username}}</view>
+        </view>
+
+        <view class="weui-cell">
+            <view class="weui-cell__bd">姓名</view>
+            <view class="weui-cell__ft">{{loginUser.name}}</view>
+        </view>
+
+        <view class="weui-cell">
+            <view class="weui-cell__bd">权限</view>
+            <view class="weui-cell__ft">{{loginUser.roleName}}</view>
+        </view>
+
+        <view class="weui-cell"  @tap="tapModifyPassword()">
+            <view class="weui-cell__bd">修改密码</view>
+            <view class="weui-cell__ft">></view>
+        </view>
+    </view>
+
+    <view class="weui-btn-area">
+        <button class="default" type="primary" hover-class="other-button-hover"  bindtap="bindSubscribeMessage">订阅消息</button>
+    </view>
+
+    <view class="weui-btn-area">
+        <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindLogoutTap">退出</button>
+    </view>
+  
+  </view>
+</template>
+
+<style>
+
+</style>
 

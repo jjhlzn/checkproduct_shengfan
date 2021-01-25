@@ -207,6 +207,42 @@ wepy.page({
           wx.setStorageSync('loginUser', res.data.user)
           console.log(res.data.user)
           
+          wx.requestSubscribeMessage({
+            tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+            success: function (res) {
+              console.log(JSON.stringify(res))
+              console.log('subscribe success')
+              wx.login({
+                success (res) {
+                  console.log(res)
+                  if (res.code) {
+                    //发起网络请求
+                    console.log('login success')
+                    let user = wx.getStorageSync('loginUser')
+                    console.log(user)
+                    wx.request({
+                      url: service.getSubscribeMessageUrl(),
+                      method: 'POST',
+                      data: {
+                        username: user.username,
+                        code: res.code,
+                      },
+                      success: function(res) {
+                        console.log(res)
+                      }
+                    })
+                  } else {
+                    console.log('登录失败！' + res.errMsg)
+                  }
+                }
+              })
+            },
+            fail: function (res) {
+              console.log('subscribe fail')
+              console.log(JSON.stringify(res))
+            }
+          })
+          
           wx.reLaunch({
             url: './notchecklist',
           }); 
