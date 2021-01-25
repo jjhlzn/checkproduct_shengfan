@@ -1,5 +1,6 @@
 const moment = require('moment')
 const service = require('./service').Service
+const tmplId = 'Ee0fWVuB7nOu8qDTzTpTUWzSVK3Jml-xVYfywAEMA7Q'
 
 let utils = {
   isFloat: isFloat,
@@ -17,8 +18,11 @@ let utils = {
   sortImages: sortImages,
   getStartDate: getStartDate,
   getEndDate: getEndDate,
-  addSubscribeMessage: addSubscribeMessage
-
+  addSubscribeMessage: addSubscribeMessage,
+  takeOrderMessageSwitchKey: 'takeOrderMessageSwitch',
+  getTakeOrderMessageSwitch: getTakeOrderMessageSwitch,
+  clearSwitches: clearSwitches,
+  tmplId: tmplId
 }
 
 function isFloat(value) {
@@ -142,14 +146,34 @@ function getEndDate() {
   return moment().add(1, 'day').format('YYYY-MM-DD')
 }
 
+var takeOrderMessageSwitch = false
+var hasFetchtakeOrderMessageSwitch = false
+function getTakeOrderMessageSwitch() {
+  console.log('takeOrderMessageSwitch = ' + takeOrderMessageSwitch)
+  if (hasFetchtakeOrderMessageSwitch) {
+    return takeOrderMessageSwitch
+  }
+  takeOrderMessageSwitch = wx.getStorageSync(utils.takeOrderMessageSwitchKey)
+  hasFetchtakeOrderMessageSwitch = true
+}
+
+function clearSwitches() {
+  hasFetchtakeOrderMessageSwitch = false
+}
+
 function addSubscribeMessage() {
   //判断是否是本地
   //console.log(service.host)
+  if (!getTakeOrderMessageSwitch()) {
+    return
+  }
+
   if (service.host === 'localhost') {
     return
   }
+
   wx.requestSubscribeMessage({
-    tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+    tmplIds: [tmplId],
     success: function (res) {
       console.log(JSON.stringify(res))
       console.log('subscribe success')

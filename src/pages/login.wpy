@@ -150,6 +150,7 @@ page {
 
 import wepy from '@wepy/core'
 const service = require('../service').Service;
+const utils = require('../utils').utils
 
 wepy.page({
   data: {
@@ -206,42 +207,49 @@ wepy.page({
           }
           wx.setStorageSync('loginUser', res.data.user)
           console.log(res.data.user)
-          
-          wx.requestSubscribeMessage({
-            tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
-            success: function (res) {
-              console.log(JSON.stringify(res))
-              console.log('subscribe success')
-              wx.login({
-                success (res) {
-                  console.log(res)
-                  if (res.code) {
-                    //发起网络请求
-                    console.log('login success')
-                    let user = wx.getStorageSync('loginUser')
-                    console.log(user)
-                    wx.request({
-                      url: service.getSubscribeMessageUrl(),
-                      method: 'POST',
-                      data: {
-                        username: user.username,
-                        code: res.code,
-                      },
-                      success: function(res) {
-                        console.log(res)
-                      }
-                    })
-                  } else {
-                    console.log('登录失败！' + res.errMsg)
+
+          utils.clearSwitches()
+          wx.setStorageSync(utils.takeOrderMessageSwitchKey, res.data.takeOrderMessageSwitch)
+          console.log('res.data.takeOrderMessageSwitch = ' + wx.getStorageSync(utils.takeOrderMessageSwitchKey))
+          if (res.data.takeOrderMessageSwitch) {
+            wx.requestSubscribeMessage({
+              tmplIds: [utils.tmplId],
+              success: function (res) {
+                console.log(JSON.stringify(res))
+                console.log('subscribe success')
+                wx.login({
+                  success (res) {
+                    console.log(res)
+                    if (res.code) {
+                      //发起网络请求
+                      console.log('login success')
+                      let user = wx.getStorageSync('loginUser')
+                      console.log(user)
+                      wx.request({
+                        url: service.getSubscribeMessageUrl(),
+                        method: 'POST',
+                        data: {
+                          username: user.username,
+                          code: res.code,
+                        },
+                        success: function(res) {
+                          console.log(res)
+                        }
+                      })
+                    } else {
+                      console.log('登录失败！' + res.errMsg)
+                    }
                   }
-                }
-              })
-            },
-            fail: function (res) {
-              console.log('subscribe fail')
-              console.log(JSON.stringify(res))
-            }
-          })
+                })
+              },
+              fail: function (res) {
+                console.log('subscribe fail')
+                console.log(JSON.stringify(res))
+              }
+            })
+          }
+          
+          
           
           wx.reLaunch({
             url: './notchecklist',

@@ -4,17 +4,21 @@
 
   import wepy from '@wepy/core'
   import { checkPermission } from '../model/user.js';
+  const utils = require('../utils').utils
 
   wepy.page({
     data: {
       loginUser: {},
+      isShowMessageButton: false
     },
 
     methods: {
 
       onLoad: function (options) {
         const that = this.$wepy.$wx
-        that.setData({ loginUser: wx.getStorageSync('loginUser')});
+        that.setData({ loginUser: wx.getStorageSync('loginUser'), 
+        isShowMessageButton: utils.getTakeOrderMessageSwitch()});
+      
       },
 
       onReady: function () {
@@ -22,6 +26,9 @@
       },
 
       onShow: function () {
+        console.log('getTakeOrderMessageSwitch = ' + utils.getTakeOrderMessageSwitch())
+        this.setData({ loginUser: wx.getStorageSync('loginUser'), 
+        isShowMessageButton: utils.getTakeOrderMessageSwitch()});
         wx.setNavigationBarTitle({
           title: '我'
         })
@@ -42,7 +49,7 @@
 
       bindSubscribeMessage: function() {
          wx.requestSubscribeMessage({
-          tmplIds: ['Ee0fWVuB7nOu8qDTzTpTUafk-I2J_001mOhmF6nJ92s'],
+          tmplIds: [utils.tmplId],
           success: function (res) {
             console.log(JSON.stringify(res))
             console.log('subscribe success')
@@ -84,7 +91,7 @@
     </view>
 
     <view class="weui-btn-area">
-        <button class="default" type="primary" hover-class="other-button-hover"  bindtap="bindSubscribeMessage">订阅消息</button>
+        <button class="default" type="primary" hover-class="other-button-hover" wx:if="{{isShowMessageButton}}"  bindtap="bindSubscribeMessage">订阅消息</button>
     </view>
 
     <view class="weui-btn-area">
