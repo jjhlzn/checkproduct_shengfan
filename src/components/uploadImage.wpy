@@ -1,98 +1,167 @@
-<style lang="less">
-  @import "../style/component.wxss";
-</style>
 
-
-<template>
-  <div>
-    <view class="weui-cells__title">{{title}}</view>
-    <view class="weui-cells weui-cells_after-title">
-        <view class="weui-cell">
-            <view class="weui-uploader__bd">
-                  <view class="weui-uploader__files"  >
-                        <block v-for="(item, index) in files"  v-bind:key="'file_'+index">
-                          <view class="weui-uploader__file" bindtouchend="touchend"  @longtap="bindLongImageTap(index)" @tap="previewImage(index)"  >
-                              <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
-                          </view>
-                        </block>
-
-                    <view class="weui-uploader__input-box">
-                      <view class="weui-uploader__input" bindtap="chooseImage"></view>
-                    </view>
-                  </view>
-    
-              </view>
-        </view>
-
-        
-        <view class="weui-cell" wx:if="{{isNeedImageMemos[index]}}">
-             <view class="weui-cell__bd">
-                    <input id="{{index}}" class="weui-textarea" placeholder="输入图片备注" bindinput="bindImageMemo"
-                    v-model="imageMemos[index]"
-                    placeholder-style="color:#e2e2e2;" maxlength="-1" />
-                    
-                </view>
-        </view>
-         
-    </view>
-    </div>
-</template>
 
 <script>
   import wepy from '@wepy/core'
 
   let service = require('../service').Service
-  const utils = require('../utils').utils;
 
   wepy.component({
     data: {
       title: "",
       files: [],
+      isNeedEdit: false,
       deleteImages: [],
       addImages: [], 
       imageMemos: [],
       index: 0,
       localImageMap: {},
+
+      selectImageMode: false,  //选择模式，用于批量删除
+      selectedFlags: [],
+      confirmDelete: false,
+      isBtx: false,
     },
 
-    props: ["title", "files", "deleteImages", "addImages", "index", "isNeedImageMemos", "imageMemos"],
+    props: ["title", "files", "deleteImages", "addImages", "index", "isNeedImageMemos", 
+        "imageMemos", "isNeedEdit", "localImageMap", "selectImageMode", "confirmDelete", "isBtx"],
+
+    watch: {
+        files: function (newVal, oldVal) {
+            //console.log('files changed')
+            //console.log(newVal, oldVal)
+            let that = this.$wx
+            if (newVal.length > 0 && that.data.selectedFlags.length == 0) {
+               for(var i = 0; i < newVal.length; i++) {
+                  that.data.selectedFlags.push(false)
+                  //console.log('push false to selectedFlags')
+                }
+            }
+            //console.log('files changed end')
+        },
+        imageMemos: function(newVal, oldVal) {
+          //console.log('imageMemos changed')
+          //console.log(newVal, oldVal)
+        },
+        selectImageMode: function(newVal, oldVal) {
+          //console.log('selectImageMode changed')
+          let that = this.$wx
+          for (var i = 0; i < that.data.selectedFlags.length; i++) {
+            that.data.selectedFlags[i] = false
+          }
+          that.setData({
+            selectedFlags: that.data.selectedFlags
+          })
+        },
+        confirmDelete: function(newValue, oldVal) {
+          let that = this.$wx
+          //console.log(`watch: confirmDelte ${that.data.index}: newValue = ${newValue}`)
+          if (newValue) {
+            let that = this.$wx
+            that.handleBatchDelete(this)
+          }
+        }
+    },
+
 
     methods: {
+      handleBatchDelete: function(vm) {
+        //执行删除
+        this.deleteImages(vm)
+      },
 
       chooseImage: function (e) {
         var self = this
         const that = this.$wx
-
-        utils.addSubscribeMessage()
-      
+        //console.log(e)
+        ///console.log(self)
         wx.chooseImage({
           sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
           sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+          count: that.data.isNeedEdit ? 1 : 9,
           success: function (res) {
             // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
             var localImages = res.tempFilePaths
+            //console.log(localImages)
             that.data.files = that.data.files.concat(res.tempFilePaths)
+            var length = res.tempFilePaths.length
+            //console.log( that.data.imageMemos )
+            for(var i = 0 ; i < length; i ++) {
+               if (that.data.imageMemos) {
+                that.data.imageMemos.push('')
+               }
+               that.data.selectedFlags.push(false)
+            }
+           // console.log(that.data.files)
             that.setData({
               files: that.data.files
             });
             self.$emit('setfiles', {index:  that.data.index, files: that.data.files})
-
+            //console.log('imageMemos: ' + JSON.stringify(that.data.imageMemos))
+           self.$emit('setimagememos', {index: that.data.index, imageMemos: that.data.imageMemos})
+            
             //需要把本地的图片上传到服务器，就是为了能够预览本地的图片
             localImages.forEach( localImage => {
+              //that.data.localImageMap[localImage] = localImage
               self.upload(localImage)
             })
+
+            //图片编辑
+            if (that.data.isNeedEdit) {
+              wx.navigateTo({
+              // url: './editimage?path=./'+localImages[0].substring(7)
+                url: './editimage?path='+localImages[0]+'&imageTypeIndex='+that.data.index
+              }) 
+            }
           }
         })
       },
 
+      bindImageMemo: function(e) {
+
+        var self = this.$wx
+        var that = self
+       
+        var index = parseInt(e.$wx.target.id)
+        var value = e.$wx.detail.value
+        //console.log(self.data.imageMemos)
+        //console.log("index = " + index)
+        self.data.imageMemos[index] = value
+      
+        that.setData({
+          imageMemos: self.data.imageMemos
+        })
+        console.log(self.data.imageMemos)
+        this.$emit('setimagememos', {index: self.data.index, imageMemos: self.data.imageMemos})
+        
+      },
+
+      tapImage: function(index) {
+         const that = this.$wx
+         //that.previewImage(index)
+         if (that.data.selectImageMode) {
+           that.selectImage(index)
+         } else {
+           that.previewImage(index)
+         }
+         
+      },
+
+      selectImage: function (index) {
+        const that = this
+        that.data.selectedFlags[index] = !that.data.selectedFlags[index]
+        that.setData({
+          selectedFlags: that.data.selectedFlags
+        })
+      },
+
       previewImage: function (index) {
-        utils.addSubscribeMessage()
-        const that = this.$wx
+        //const that = this.$wx
+        const that = this
         if (that.data.lock) {
           return;
         }
         //console.log(this.data.files)
-        console.log(that.data.files[index])
+        console.log('fileName: ' + that.data.files[index])
 
         wx.previewImage({
           current: that.getMapUrl(that.data.files[index]) + "?notCompress=true", // 当前显示图片的http链接
@@ -110,13 +179,19 @@
 
       getMapUrl: function(url) {
         console.log(url)
-        console.log(this.data.localImageMap)
-        if (url.startsWith('http://tmp/')) {
+        //console.log(this.data.localImageMap)
+        if (url.startsWith('http://tmp/') || url.startsWith('wxfile://')) {
           var fileName = this.getFileName(url)
-          console.log(fileName)
+          //console.log(fileName)
           var resultUrl = this.data.localImageMap[fileName]
+
+          if (resultUrl == null) {
+            //console.log(resultUrl)
+             //console.log("getMapUrl: reulst -> " + url)
+            return url
+          }
           
-          console.log(resultUrl)
+          //console.log(resultUrl)
           return  service.getCheckImageUrl(resultUrl)
         }
 
@@ -125,12 +200,17 @@
         }
 
         var fileName = this.getFileName(url)
-        console.log(fileName)
+        //console.log(fileName)
         var resultUrl = this.data.localImageMap[fileName]
         
-        console.log(resultUrl)
+        //console.log(resultUrl)
+        if (resultUrl == null) {
+          //console.log("getMapUrl: reulst -> " + url)
+          return url
+        }
         return  service.getCheckImageUrl(resultUrl)
       },
+
 
       touchend: function (e) {
         const that = this.$wx
@@ -143,69 +223,60 @@
         }
       },
 
-      
-      bindImageMemo: function(e) {
-        utils.addSubscribeMessage()
-        var self = this.$wx
-        var that = self
-       
-        var index = parseInt(e.$wx.target.id)
-        var value = e.$wx.detail.value
-        console.log(self.data.imageMemos)
-        console.log("index = " + index)
-        self.data.imageMemos[index] = value
-      
-        that.setData({
-          imageMemos: self.data.imageMemos
-        })
-        console.log(self.data.imageMemos)
-        this.$emit('setimagememos', {index: index, imageMemos: self.data.imageMemos})
-        
-      },
 
-      getImageUrl: function(page, index) {
-        console.log(this)
-        const that = page
-        return that.data.files[index];
-      },
-
-      //传入按键事件，将所点按的图片删除
-      removeImage: function (vm, page, index) {
-        const that = page
-        let url = that.data.files.splice(index, 1);
-        console.log("delete image: " + url);
-        that.setData({ files: that.data.files });
-        vm.$emit('setfiles', {index:  that.data.index, files: that.data.files})
-      },
 
       bindLongImageTap: function (index) {
-        utils.addSubscribeMessage()
         console.log('long tap handler')
         const vm = this
         let self = this.$wx;
         self.setData({
           lock: true
         });
-        wx.showModal({
-          title: '',
-          content: '删除该图片？',
-          success: function (res) {
-            if (res.confirm) {
-              console.log('用户点击确定')
-              let url = self.getImageUrl(self, index);
-              self.removeImage(vm, self, index);
-              console.log('url: ' + url);
-              if (!url.startsWith('http://tmp/') && !url.startsWith('wxfile://')) {
-                //self.data.deleteImages.push(url);
-                vm.$emit('adddeletefile', {url:  url})
-              }
+        if (self.data.selectImageMode) {
+          return
+        }
+        self.enterSelectMode()
+        vm.$emit('enterselectmode', {})
+      },
 
-            } else if (res.cancel) {
-              console.log('用户点击取消')
-            }
-          }
+      enterSelectMode: function() {
+        var that = this
+        
+        that.setData({
+          selectImageMode: true,
+          //selectedFlags: that.data.selectedFlags
         })
       },
+
+      deleteImages: function(vm) {
+        let self = this
+        let that = this
+
+        let files = [], memos = [], deleteUrls = [], selectedFlags = []
+        console.log(that.data.selectedFlags)
+        for (var i = 0; i < that.data.selectedFlags.length; i++) {
+          let isSelect = that.data.selectedFlags[i]
+          if (isSelect) {
+            let url = that.data.files[i]
+            if (!url.startsWith('http://tmp/') && !url.startsWith('wxfile://')) {
+              deleteUrls.push(url)
+            }
+            console.log('delete image index: ' + i)
+          } else {
+            files.push(that.data.files[i])
+            selectedFlags.push(false)
+            if (that.data.imageMemos) {
+              memos.push(that.data.imageMemos[i])
+            }
+          }
+        } 
+        that.setData({ files: files, imageMemos: memos, selectedFlags: selectedFlags });
+        vm.$emit('setfiles', {index:  that.data.index, files: that.data.files})
+        vm.$emit('setimagememos', {index: that.data.index, imageMemos: memos})
+
+        vm.$emit('adddeletefile', {urls:  deleteUrls})
+      },
+
 
       upload: function(localImage) {
         var self = this.$wx
@@ -231,15 +302,14 @@
             if (json.status !== 0) {
               return
             } 
-
+            console.log("self.data.localImageMap = " + self.data.localImageMap)
+            console.log("json.fileNames[0] = " + json.fileNames[0])
             self.data.localImageMap[json.orginNames[0]] = json.fileNames[0]
             console.log( self.data.localImageMap[json.orginNames[0]] )
             console.log(self.data.localImageMap)
-
           },
           fail: function (err) {
             console.log(err)
-
           }
         })
       },
@@ -247,3 +317,57 @@
     }
   })
 </script>
+
+
+
+
+<template>
+  <div>
+    <view class="weui-cells__title {{ isBtx ? 'btx' : ''}}">{{title}}: </view>
+    <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell">
+            <view class="weui-uploader__bd">
+                  <view class="weui-uploader__files"  >
+                        <block v-for="(item, i) in files"  v-bind:key="'file_'+i">
+                          <view class="weui-uploader__file" style="position: relative; " >
+
+                              <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill"
+                                      bindtouchend="touchend" 
+                                     @longtap="bindLongImageTap(i)" @tap="tapImage(i)"  />
+                              <textarea wx:if="{{isNeedImageMemos[index]}}" id="{{i}}" 
+                                      class="weui-uploader__img_memo" 
+                                      placeholder="输入图片备注" bindinput="bindImageMemo"
+                              style="font-size: 13px; height: 2.6em; " value="{{imageMemos[i]}}"
+                              placeholder-style="color:#e2e2e2;" maxlength="-1" />
+
+                              <image wx:if="{{selectImageMode}}" class="img_sel_icon" 
+                                  src="{{ selectedFlags[i] ? '../icons/checkbox_2.png' : ''}}" />
+
+                          </view>
+                        </block>
+                    <view wx:if="{{!selectImageMode}}" class="weui-uploader__input-box">
+                      <view class="weui-uploader__input" bindtap="chooseImage"></view>
+                    </view>
+                  </view>
+              </view>
+        </view>
+    </view>
+      
+    </div>
+</template>
+
+
+<style lang="less">
+  @import "../style/component.wxss";
+
+  .img_sel_icon {
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+  }
+  .btx {
+    color: #990000;
+  }
+</style>

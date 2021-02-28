@@ -43,14 +43,20 @@
       product: {
 
       },
+
       files: [[],[],[],[],[],[],[],[],[],[],[]],
-      titles: ['抽检箱号图片：', '外箱及开箱中包图片：', '辅料及单包包装图片：', '条码扫描结果图片：', '产品及颜色花型图片：',
-               '产品克重图片：', '尺寸工艺图片：', '问题图片：', '返工通知单及保函文件图片：', '验货报告图片：',
-               '重验图片：'],
-      isNeedImageMemos: [false, false, false, false, false, false, false, true, false, false, false],
-      imageMemos: ['','','','','','','','','','',''],
+      titles: ['廉洁说明书', '厂门照', '验货员到场照', '产品', '包装',
+               '抽卷唛头', '颜色对样', '克重', '门幅', '问题说明',
+               '报告'], 
+      isNeedImageMemos:  [false, false, false, false, false, false, true, false, false, true, false],
+      imageMemos: [[],[],[],[],[],[],[],[],[],[], []],
+      localImageMaps: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
       deleteImages: [],
       addImages: [],   //[{fileName: '', orginName: '', hasAddToDB: true}]
+      selectImageMode: false,
+      confirmDelete: false,
+
+
       uploadImageError: false,
       focusList: [false, false, false],
       gpsAddress: '',
@@ -66,33 +72,74 @@
           addrIndex: e.detail.value
         })
       },
+
+
  
+        /* uploadImage 组件使用 */
       setfiles: function(obj) {
-        console.log('setfiles called')
-        console.log("index: " + obj.index)
-        console.log(obj.files)
+        //console.log('setfiles called')
+        //console.log("index: " + obj.index)
+        //console.log(obj.files)
         const index = obj.index
         const tmpFiles =  obj.files
         const that = this.$wx
         that.data.files[index] = tmpFiles
         console.log(that.data.files)
       },
+      
+
+      adddeletefile: function(obj) {
+         console.log('adddeletefile called')
+         const that = this.$wx
+         obj.urls.forEach(url => {
+           that.data.deleteImages.push(url)
+         })
+         console.log(that.deleteImages)
+      },
 
       setimagememos: function(obj) {
         console.log("setImageMemo called")
         const that = this.$wx
         console.log(obj)
-        that.data.imageMemos[obj.index] = obj.imageMemos[obj.index]
+        // that.data.imageMemos[obj.index] = obj.imageMemos[obj.index]
         //console.log(that.data.imageMemos)
-        //that.data.imageMemos = obj.imageMemos
+        that.data.imageMemos[obj.index] = obj.imageMemos
+        console.log(that.data.imageMemos)
+        that.setData({
+          imageMemos: that.data.imageMemos
+        })
       },
 
-      adddeletefile: function(obj) {
-         console.log('adddeletefile called')
-         const that = this.$wx
-         that.data.deleteImages.push(obj.url)
-         console.log(that.deleteImages)
+      enterselectmode: function(obj) {
+        const that = this.$wx
+        console.log("enterselectmode called")
+        that.setData({
+          selectImageMode: true
+        })
       },
+
+      quitselectmode: function() {
+        const that = this.$wx || this
+          
+        that.setData({
+          selectImageMode: false,
+          confirmDelete: false,
+        })
+      },
+
+      bindConfirmDelete: function() {
+        const that = this.$wx
+        that.setData({
+          confirmDelete: true
+        })
+        setTimeout(() => {
+          that.quitselectmode()
+        }, 1);
+      },
+      /*------ uploadImage 组件使用--------- */
+
+
+
 
       setGpsAddress: function(e) {
         this.data.gpsAddress = e.detail.value
@@ -251,12 +298,13 @@
             res.data.product.zlkUrls = res.data.product.zlkUrls.map(file => service.makeImageUrl(file));
             res.data.product.productUrls = res.data.product.productUrls.map(file => service.makeProductImageUrl(file));
             console.log(res.data.product.productUrls)
+            console.log("imageMemos: " + JSON.stringify( res.data.product.imageMemos))
             self.setData({
               product: res.data.product,
+              imageMemos: res.data.product.imageMemos,
               files: urls,
               radioItems: self.data.radioItems,
               statusRadioItems: self.data.statusRadioItems,
-              imageMemos: self.data.imageMemos,
               canEdit: res.data.product.checkerId == self.data.loginUser.username || self.data.loginUser.role == 'checker_manager'
             })
 
@@ -455,6 +503,7 @@
         let addImageUrls = self.data.addImages.filter(item => { return !item.hasAddToDB }).map(item => item.fileName);
         console.log('addImages:' + addImageUrls);
         console.log('deleteImages: ' + self.data.deleteImages);
+        console.log('imageMemos: ' + JSON.stringify(self.data.imageMemos));
         console.log('imageMemo: ' + self.data.imageMemos[7])
 
         let queryParams = {
@@ -477,8 +526,10 @@
           checkAddress: self.data.gpsAddress,
           username: utils.getMyUserName(),
 
-          problemImageMemo: self.data.imageMemos[7],
+          bpfmfs: self.data.product.bpfmfs,
 
+          //problemImageMemo: self.data.imageMemos[7], 
+          imageMemos: self.data.imageMemos,
           addImages: utils.combineImageUrls(addImageUrls),
           deleteImages: utils.combineImageUrls(self.data.deleteImages)
         }
@@ -605,6 +656,7 @@
    
     <view class="page__bd">
 
+      <view class="otherContainer">
         <view class="weui-cells__title"> 验货属性 </view>
         <view class="weui-cells weui-cells_after-title">
             <view class="weui-cell disabled" >
@@ -615,23 +667,38 @@
                  {{product.announcements == null || product.announcements == "" ? "无" : product.announcements}}
                 </view>
             </view>
+
+            <view class="weui-cell disabled">
+                <view class="weui-cell__bd">订单量</view>
+                <view class="weui-cell__ft">
+                   {{product.jjsl}}
+                </view>
+            </view>
+
+             <view class="weui-cell">
+                <view class="weui-cell__bd">百平方码平均扣分数</view>
+                <view class="weui-cell__ft">
+                   <input type="number" placeholder="0" v-model="product.bpfmfs"/>
+                </view>
+            </view>
+
             
             <view class="weui-cell">
-                <view class="weui-cell__bd">实际验货箱数</view>
+                <view class="weui-cell__bd">待验卷数</view>
                 <view class="weui-cell__ft">
                    <input type="number" placeholder="" v-model="product.totalCount"/>
                 </view>
             </view>
 
             <view class="weui-cell">
-                <view class="weui-cell__bd">抽箱数</view>
+                <view class="weui-cell__bd">抽验卷数</view>
                 <view class="weui-cell__ft">
                   <input type="number" placeholder="" v-model="product.pickCount" />
                 </view>
             </view>
 
             <view class="weui-cell">
-                <view class="weui-cell__bd">实际验货数量</view>
+                <view class="weui-cell__bd">待验数量</view>
                 <view class="weui-cell__ft">
                   <input type="number" placeholder="" v-model="product.sjCount" />
                 </view>
@@ -698,119 +765,149 @@
             
         </view>
 
-      
+         <view class=" {{ selectImageMode ? 'grayCover' : ''}}"></view>
+      </view>
 
-        <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
-         v-bind:imageMemos.sync="imageMemos"
+         <uploadImage v-for="(item, index) in files" v-bind:files.sync="files[index]"
+        
+        v-bind:imageMemos.sync="imageMemos[index]"
+        v-bind:localImageMap.sync="localImageMaps[index]"
         v-bind:index="index"
+        
         v-on:setfiles="setfiles"
-         v-on:setimagememos="setimagememos"
+        v-on:setimagememos="setimagememos"
+
+        v-bind:confirmDelete="confirmDelete"
+        v-bind:selectImageMode.sync="selectImageMode"
+        v-on:enterselectmode="enterselectmode"
+        v-on:quitselectmode="quitselectmode"
+
          v-on:adddeletefile="adddeletefile"
-          v-bind:isNeedImageMemos="isNeedImageMemos"
+         v-bind:isNeedImageMemos="isNeedImageMemos"
+
          v-bind:deleteImages="deleteImages" v-bind:addImages="addImages"
          v-bind:title="titles[index]" v-bind:key="'uploadImage_' + index" ></uploadImage>
 
-        <view class="weui-cells__title">商品图片</view>
-          <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-uploader__bd">
-                            <view class="weui-uploader__files"  >
-                                 <block wx:for="{{product.productUrls}}" wx:key="*this">
-                                    <view class="weui-uploader__file"  bindtap="previewProductImage" id="image_{{index}}">
-                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
-                                    </view>
-                                </block>
-                            </view>
-                        </view>
-            </view>
-        </view>
+         <view class="otherContainer">
 
-        <view class="weui-cells__title">资料库图片</view>
-        <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-uploader__bd">
-                            <view class="weui-uploader__files"  >
-                                 <block wx:for="{{product.zlkUrls}}" wx:key="*this">
-                                    <view class="weui-uploader__file"  bindtap="previewZlkImage" >
-                                        <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
-                                    </view>
-                                </block>
+            <view class="weui-cells__title">商品图片</view>
+              <view class="weui-cells weui-cells_after-title">
+                <view class="weui-cell">
+                    <view class="weui-uploader__bd">
+                                <view class="weui-uploader__files"  >
+                                    <block wx:for="{{product.productUrls}}" wx:key="*this">
+                                        <view class="weui-uploader__file"  bindtap="previewProductImage" id="image_{{index}}">
+                                            <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                        </view>
+                                    </block>
+                                </view>
                             </view>
-                            
-                        </view>
-            </view>
-        </view>
-
-        <view class="weui-cells__title">验货总评</view>
-        <view class="weui-cells weui-cells_after-title">
-            <view class="weui-cell">
-                <view class="weui-cell__bd">
-                    <textarea class="weui-textarea" placeholder="请输入验货总评" 
-                    v-model="product.checkMemo" style="height: 14em" maxlength="-1" />
-                    <!--<view class="weui-textarea-counter">0/200</view> -->
                 </view>
             </view>
-        </view>
 
-         <view class="weui-cells__title">验货地址</view>
-        <view class="weui-cells weui-cells_after-title">
-          <view class="weui-cell">
-                <view class="weui-cell__bd">
-                    <textarea class="weui-textarea" placeholder=""  v-model="gpsAddress" style="height: 3.1em" />
-                    <!--<view class="weui-textarea-counter">0/200</view> -->
+            <view class="weui-cells__title">资料库图片</view>
+            <view class="weui-cells weui-cells_after-title">
+                <view class="weui-cell">
+                    <view class="weui-uploader__bd">
+                                <view class="weui-uploader__files"  >
+                                    <block wx:for="{{product.zlkUrls}}" wx:key="*this">
+                                        <view class="weui-uploader__file"  bindtap="previewZlkImage" >
+                                            <image  class="weui-uploader__img" src="{{item}}" mode="aspectFill" />
+                                        </view>
+                                    </block>
+                                </view>
+                                
+                            </view>
                 </view>
             </view>
-        </view>
 
-        
-        <view class="weui-cells__title">验货结果</view>
-        <view class="weui-cells weui-cells_after-title">
-
-
-            <radio-group bindchange="radioChange">
-                <label class="weui-cell weui-check__label" wx:for="{{radioItems}}" wx:key="value">
-                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
-
-                    <view class="weui-cell__bd">{{item.name}}</view>
-                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
-                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
-                    </view> 
-                </label>
-            </radio-group>
-
-
-        </view>
-
-        <view class="weui-cells__title">验货状态</view>
-        <view class="weui-cells weui-cells_after-title">
-            <radio-group bindchange="statusRadioChange">
-                <label class="weui-cell weui-check__label" wx:for="{{statusRadioItems}}" wx:key="value">
-                    <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
-
-                    <view class="weui-cell__bd">{{item.name}}</view>
-                    <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
-                        <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+            <view class="weui-cells__title">验货总评</view>
+            <view class="weui-cells weui-cells_after-title">
+                <view class="weui-cell">
+                    <view class="weui-cell__bd">
+                        <textarea class="weui-textarea" placeholder="请输入验货总评" 
+                        v-model="product.checkMemo" style="height: 14em" maxlength="-1" />
+                        <!--<view class="weui-textarea-counter">0/200</view> -->
                     </view>
-                </label>
-            </radio-group>
+                </view>
+            </view>
+
+            <view class="weui-cells__title">验货地址</view>
+            <view class="weui-cells weui-cells_after-title">
+              <view class="weui-cell">
+                    <view class="weui-cell__bd">
+                        <textarea class="weui-textarea" placeholder=""  v-model="gpsAddress" style="height: 3.1em" />
+                        <!--<view class="weui-textarea-counter">0/200</view> -->
+                    </view>
+                </view>
+            </view>
+
+            
+            <view class="weui-cells__title">验货结果</view>
+            <view class="weui-cells weui-cells_after-title">
+
+
+                <radio-group bindchange="radioChange">
+                    <label class="weui-cell weui-check__label" wx:for="{{radioItems}}" wx:key="value">
+                        <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                        <view class="weui-cell__bd">{{item.name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                            <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                        </view> 
+                    </label>
+                </radio-group>
+
+
+            </view>
+
+            <view class="weui-cells__title">验货状态</view>
+            <view class="weui-cells weui-cells_after-title">
+                <radio-group bindchange="statusRadioChange">
+                    <label class="weui-cell weui-check__label" wx:for="{{statusRadioItems}}" wx:key="value">
+                        <radio class="weui-check" value="{{item.value}}" checked="{{item.checked}}"/>
+
+                        <view class="weui-cell__bd">{{item.name}}</view>
+                        <view class="weui-cell__ft weui-cell__ft_in-radio" wx:if="{{item.checked}}">
+                            <icon class="weui-icon-radio" type="success_no_circle" size="16"></icon>
+                        </view>
+                    </label>
+                </radio-group>
+            </view>
+
+           <view class=" {{ selectImageMode ? 'grayCover' : ''}}"></view>
+         </view>
+
+        <view wx:if="{{!selectImageMode}}">
+
+          <view class="weui-btn-area" >
+              <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+          </view>
+
+          <view class="weui-btn-area" >
+              <button class="weui-btn" style="background-color: #e64340;"  wx:if="{{canEdit}}"  type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
+          </view>
+
+          <view class="weui-btn-area">
+              <button type="default" hover-class="other-button-hover"  wx:if="{{canEdit}}"   bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
+            </view> 
+
+
+          <view class="weui-btn-area">
+              <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
+          </view>  
         </view>
 
-        <view class="weui-btn-area" >
-            <button class="weui-btn" type="primary" wx:if="{{canEdit}}" hover-class="other-button-hover"  bindtap="bindSubmitTap">提交</button>
+        <view class="selectImageBtnContainer" wx:if="{{selectImageMode}}">
+          <view class="btnView">
+              <button id="cancelSelectBtn" class="default"  type="primary" bindtap="quitselectmode">
+                取消
+              </button>
+              <button id="confirmDeleteBtn" type="warn"  bindtap="bindConfirmDelete">
+                删除       
+              </button>
+          </view>
         </view>
-
-        <view class="weui-btn-area" >
-            <button class="weui-btn" style="background-color: #e64340;"  wx:if="{{canEdit}}"  type="warn" hover-class="other-button-hover"  bindtap="bindDeleteCheckResultTap">清除验货结果</button>
-        </view>
-
-        <view class="weui-btn-area">
-            <button type="default" hover-class="other-button-hover"  wx:if="{{canEdit}}"   bindtap="bindModifyZlkImagesTap">修改资料库图片</button>
-          </view> 
-
-
-        <view class="weui-btn-area">
-            <button class="weui-btn" type="primary" hover-class="other-button-hover"  bindtap="bindOpenLinkTap">打印格式</button>
-        </view>  
 
     </view>
 </view>
