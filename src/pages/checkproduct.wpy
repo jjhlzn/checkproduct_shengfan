@@ -704,32 +704,13 @@
                 </view>
             </view>
 
-            <view class="weui-cell">
-                <view class="weui-cell__bd">外箱尺寸</view>
+             <view class="weui-cell">
+                <view class="weui-cell__bd">待验数量单位</view>
                 <view class="weui-cell__ft">
-                  <input class="inputBox" type="digit" placeholder=""
-                   value="{{product.sizeObj.long != 0 ? product.sizeObj.long : '0'}}" bindinput="setLong" focus="{{focusList[0]}}"/> 
-                    <p class="x"> x </p>
-                   <input id="widthInput" class="inputBox" type="digit" placeholder="" 
-                   value="{{product.sizeObj.width != 0 ? product.sizeObj.width : '0'}}" bindinput="setWidth" focus="{{focusList[1]}}"/> 
-                    <p class="x"> x </p>
-                   <input class="inputBox" type="digit" placeholder="" 
-                   value="{{product.sizeObj.height != 0 ? product.sizeObj.height : '0'}}" bindinput="setHeight" focus="{{focusList[2]}}"/> 
-                    <p style="width: 30px; float: left; text-align:right;"> cm </p>
+                  <input type="number" placeholder=" " v-model="product.jjdw" />
                 </view>
             </view>
-            <view class="weui-cell">
-                <view class="weui-cell__bd">单件毛重</view>
-                <view class="weui-cell__ft">
-                  <input  placeholder="" v-model="product.grossWeight"/>
-                </view>
-            </view>
-            <view class="weui-cell">
-                <view class="weui-cell__bd">单件净重</view>
-                <view class="weui-cell__ft">
-                  <input  placeholder="" v-model="product.netWeight" />
-                </view>
-            </view>
+            
 
             <view class="weui-cell disabled">
                 <view class="weui-cell__bd">验货时间</view>
