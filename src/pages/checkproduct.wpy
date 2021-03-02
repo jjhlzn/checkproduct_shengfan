@@ -527,6 +527,7 @@
           username: utils.getMyUserName(),
 
           bpfmfs: self.data.product.bpfmfs,
+          jjdw: self.data.product.jjdw,
 
           //problemImageMemo: self.data.imageMemos[7], 
           imageMemos: self.data.imageMemos,
@@ -686,21 +687,21 @@
             <view class="weui-cell">
                 <view class="weui-cell__bd">待验卷数</view>
                 <view class="weui-cell__ft">
-                   <input type="number" placeholder="" v-model="product.totalCount"/>
+                   <input type="number" placeholder="0" v-model="product.totalCount"/>
                 </view>
             </view>
 
             <view class="weui-cell">
                 <view class="weui-cell__bd">抽验卷数</view>
                 <view class="weui-cell__ft">
-                  <input type="number" placeholder="" v-model="product.pickCount" />
+                  <input type="number" placeholder="0" v-model="product.pickCount" />
                 </view>
             </view>
 
             <view class="weui-cell">
                 <view class="weui-cell__bd">待验数量</view>
                 <view class="weui-cell__ft">
-                  <input type="number" placeholder="" v-model="product.sjCount" />
+                  <input type="number" placeholder="0" v-model="product.sjCount" />
                 </view>
             </view>
 
