@@ -708,7 +708,7 @@
              <view class="weui-cell">
                 <view class="weui-cell__bd">待验数量单位</view>
                 <view class="weui-cell__ft">
-                  <input type="number" placeholder=" " v-model="product.jjdw" />
+                  <input type="text" placeholder=" " v-model="product.jjdw" />
                 </view>
             </view>
             
